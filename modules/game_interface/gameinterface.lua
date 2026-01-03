@@ -698,6 +698,11 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
                     modules.game_prey.show()
                 end)
             end
+            if g_game.getFeature(GameForgeConvergence) then
+                menu:addOption(tr('Exaltation Forge'), function()
+                    modules.game_forge.show()
+                end)
+            end
 
             if g_game.getFeature(GamePlayerMounts) then
                 if not localPlayer:isMounted() then
