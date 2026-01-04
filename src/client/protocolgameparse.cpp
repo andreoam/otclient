@@ -80,6 +80,9 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                 case Proto::GameServerEnterGame:
                     parseEnterGame(msg);
                     break;
+                case Proto::GameServerWheelOfDestinyOpenWindow:
+                    parseWheelOfDestinyOpenWindow(msg);
+                    break;
                 case Proto::GameServerUpdateNeeded:
                     parseUpdateNeeded(msg);
                     break;
@@ -762,6 +765,105 @@ void ProtocolGame::parseEnterGame(const InputMessagePtr&)
         g_game.processGameStart();
         m_gameInitialized = true;
     }
+}
+
+void ProtocolGame::parseWheelOfDestinyOpenWindow(const InputMessagePtr& msg)
+{
+    WheelData data;
+
+    data.ownerId = msg->getU32();
+    // g_logger.info("owner Id {}", data.ownerId);
+    data.canUse = msg->getU8();
+    // g_logger.info("canUse {}", data.canUse);
+    data.options = msg->getU8(); // 0: cannot change, 1: inc/dec, 2: only inc
+    // g_logger.info("options {}", data.options);
+    data.vocationId = msg->getU8();
+    // g_logger.info("vocationId {}", data.vocationId);
+    data.points = msg->getU16();
+    // g_logger.info("points {}", data.points);
+    data.extraPoints = msg->getU16();
+    // g_logger.info("extraPoints {}", data.extraPoints);
+
+    // wheelPoints (SLOT_FIRST..SLOT_LAST), tipo uint16_t
+    for (uint8_t i = static_cast<uint8_t>(Otc::WheelSlots_t::SLOT_FIRST);
+         i <= static_cast<uint8_t>(Otc::WheelSlots_t::SLOT_LAST); ++i) {
+        const size_t idx = i - static_cast<uint8_t>(Otc::WheelSlots_t::SLOT_FIRST);
+        data.wheelPoints[idx] = msg->getU16();
+    }
+
+    // promotion scrolls
+    const uint16_t promotionScrollSize = msg->getU16();
+    data.promotionScrolls.reserve(promotionScrollSize);
+    for (uint16_t i = 0; i < promotionScrollSize; ++i) {
+        const uint16_t itemId = msg->getU16();
+        const uint8_t  extraPoints = msg->getU8();
+        data.promotionScrolls.emplace_back(itemId, extraPoints);
+        // g_logger.info("promotionScrolls[{}] itemId {} extraPoints {}", i, itemId, extraPoints);
+    }
+
+    data.extraPointsForMonkQuest = 0;
+    if (g_game.getClientVersion() >= 1500) {
+        data.extraPointsForMonkQuest = msg->getU8();
+    }
+    // g_logger.info("extraPointsForMonkQuest {}", data.extraPointsForMonkQuest);
+
+    // active gems
+    const uint8_t activeGemsSize = msg->getU8();
+    data.activeGems.reserve(activeGemsSize);
+    for (uint8_t i = 0; i < activeGemsSize; ++i) {
+        data.activeGems.push_back(msg->getU16()); // gemId
+        // g_logger.info("activeGems[{}] {}", i, data.activeGems[i]);
+    }
+
+    // revealed gems (mapeadas por index)
+    const uint8_t revealedGemsSize = msg->getU16();
+    data.revealedGems.reserve(revealedGemsSize);
+    for (uint8_t i = 0; i < revealedGemsSize; ++i) {
+        const uint16_t index = msg->getU16();
+        const uint8_t  locked = msg->getU8();
+        const uint8_t  affinity = msg->getU8(); // 0=TL, 1=TR, 2=BL, 3=BR
+        const uint8_t  quality = msg->getU8(); // 0=Lesser, 1=Regular, 2=Greater
+        const uint8_t  basicModifier1 = msg->getU8();
+        const uint8_t  basicModifier2 = (quality >= 1) ? msg->getU8() : 0;
+        const uint8_t  supremeModifier = (quality >= 2) ? msg->getU8() : 0;
+
+        data.revealedGems[index] = { locked, affinity, quality,
+                                     basicModifier1, basicModifier2, supremeModifier };
+        // g_logger.info("revealedGems[{}] locked {} affinity {} quality {} basicModifier1 {} basicModifier2 {} supremeModifier {}",
+        // index, locked, affinity, quality, basicModifier1, basicModifier2, supremeModifier);
+    }
+
+    // basic modifiers (todas vocações)
+    const uint8_t markerBasic = msg->getU8();
+    if (markerBasic != 0x2E) {
+        // g_logger.warning(fmt::format("[Wheel] Esperado marcador 0x2E, mas recebeu 0x{:02X}", markerBasic));
+        return;
+    }
+    constexpr uint8_t BASIC_MODS_COUNT = 46; // igual ao modsBasicPosition do servidor
+    for (uint8_t i = 0; i < BASIC_MODS_COUNT; ++i) {
+        const uint8_t pos = msg->getU8();
+        const uint8_t grade = msg->getU8();
+        data.basicGrades[pos] = grade;
+        // g_logger.info("basicGrades[{}] {}", pos, grade);
+    }
+
+    // supreme modifiers (somente da vocação enviada no pacote)
+    const uint8_t markerSupreme = msg->getU8();
+    if (markerSupreme != 0x17) {
+        // g_logger.warning(fmt::format("[Wheel] Esperado marcador 0x17, mas recebeu 0x{:02X}", markerSupreme));
+        return;
+    }
+    while (!msg->eof()) {
+        const uint8_t pos = msg->getU8();
+        const uint8_t grade = msg->getU8();
+        data.supremeGrades[pos] = grade;
+        // g_logger.info("supremeGrades[{}] {}", pos, grade);
+    }
+
+    // g_logger.info(fmt::format("[Wheel] Lidos {} basic modifiers e {} supreme modifiers.",
+                //   data.basicGrades.size(), data.supremeGrades.size()));
+
+    g_lua.callGlobalField("g_game", "onWheelOfDestinyOpenWindow", data);
 }
 
 void ProtocolGame::parseStoreButtonIndicators(const InputMessagePtr& msg)

@@ -86,6 +86,7 @@ namespace Proto
         GameServerWeaponProficiencyExperience = 92,
         GameServerImbuementDurations = 93,
         GameServerPassiveCooldown = 94,
+        GameServerWheelOfDestinyOpenWindow = 95,
         GameServerBosstiaryData = 97,
         GameServerBosstiarySlots = 98,
         GameServerSendClientCheck = 99,
@@ -256,6 +257,8 @@ namespace Proto
 
         // original tibia ONLY
         ClientImbuementDurations = 96,
+        ClientOpenWheelOfDestiny = 97,
+        ClientApplyWheelOfDestiny = 98,
         ClientAutoWalk = 100,
         ClientWalkNorth = 101,
         ClientWalkEast = 102,

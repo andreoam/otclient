@@ -27,7 +27,7 @@
 
 #include "framework/core/declarations.h"
 
- //@bindsingleton g_game
+//@bindsingleton g_game
 class Game
 {
 public:
@@ -387,6 +387,8 @@ public:
     void clearImbuement(uint8_t slot);
     void closeImbuingWindow();
     void imbuementDurations(bool isOpen = false);
+    void openWheelOfDestiny(uint32_t playerId);
+    void applyWheelOfDestiny(const std::vector<uint16_t>& wheelPointsVec, const std::vector<uint16_t>& activeGemsVec);
 
     void enableTileThingLuaCallback(const bool value) { m_tileThingsLuaCallback = value; }
     bool isTileThingLuaCallbackEnabled() { return m_tileThingsLuaCallback; }

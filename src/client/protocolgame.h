@@ -149,6 +149,8 @@ public:
     void sendStashStow(const Position& position, const uint16_t itemId, const uint32_t count, const uint8_t stackpos, const uint8_t action);
     void sendHighscoreInfo(uint8_t action, uint8_t category, uint32_t vocation, std::string_view world, uint8_t worldType, uint8_t battlEye, uint16_t page, uint8_t totalPages);
     void sendImbuementDurations(bool isOpen = false);
+    void sendOpenWheelOfDestiny(uint32_t playerId);
+    void sendApplyWheelOfDestiny(const std::vector<uint16_t>& wheelPointsVec, const std::vector<uint16_t>& activeGemsVec);
     void sendRequestBestiary();
     void sendRequestBestiaryOverview(std::string_view catName);
     void sendRequestBestiarySearch(uint16_t raceId);
@@ -202,6 +204,7 @@ private:
     void parseBugReport(const InputMessagePtr& msg);
     void parsePendingGame(const InputMessagePtr& msg);
     void parseEnterGame(const InputMessagePtr& msg);
+    void parseWheelOfDestinyOpenWindow(const InputMessagePtr& msg);
     void parseLogin(const InputMessagePtr& msg) const;
     void parseGMActions(const InputMessagePtr& msg);
     void parseUpdateNeeded(const InputMessagePtr& msg);

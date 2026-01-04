@@ -116,3 +116,6 @@ int push_luavalue(const ForgeConfigData& data);
 int push_luavalue(const BossCooldownData& data);
 int push_luavalue(const PartyMemberData& data);
 int push_luavalue(const PartyMemberName& data);
+int push_luavalue(const GemData& data);
+int push_luavalue(const WheelData& data);
+int push_luavalue(const WheelData& data);
