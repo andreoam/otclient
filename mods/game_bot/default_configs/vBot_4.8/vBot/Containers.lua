@@ -598,7 +598,7 @@ local function properTable(t)
     return r
 end
 
-local mainLoop = macro(2500, function(macro)
+local mainLoop = macro(100, function(macro)
     if not config.sort and not config.purse then return end
 
     local storageVal = config.list
