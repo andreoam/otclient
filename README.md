@@ -565,11 +565,13 @@ Found a bug? Please create an issue in our **[bug tracker](https://github.com/me
 ## <a id="roadmap"></a>❤️ Roadmap
 | TO-DO list | Status | PR |
 |---|---|---|
-| wheel of destiny | ![](https://geps.dev/progress/10) | [#1311](https://github.com/mehah/otclient/pull/1311) |
+| wheel of destiny | ![](https://geps.dev/progress/100) | [#1578](https://github.com/mehah/otclient/pull/1578) |
 | Sound tibia 13 | ![](https://geps.dev/progress/80) | [#1098](https://github.com/mehah/otclient/pull/1098) |
 | Prey and tasks | ![](https://geps.dev/progress/0) | None |
 | compendium | ![](https://geps.dev/progress/0) | None |
 | Party List | ![](https://geps.dev/progress/0) | None |
+| Proficiency | ![](https://geps.dev/progress/80) | [#1593](https://github.com/mehah/otclient/pull/1593) |
+| New Imbui 15x/14x | ![](https://geps.dev/progress/80) | [#1616](https://github.com/mehah/otclient/pull/1616) |
 
 ---
 
