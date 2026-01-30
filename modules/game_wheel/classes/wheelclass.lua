@@ -2664,7 +2664,7 @@ function WheelOfDestiny.onConfirmCreatePreset()
       availablePoints = totalPoints,
       usedPoints = 0,
       pointInvested = table.reserve(36, 0),
-      equipedGems = table.reserve(4, 0)
+      equipedGems = {-1, -1, -1, -1}
     }
 
   else
