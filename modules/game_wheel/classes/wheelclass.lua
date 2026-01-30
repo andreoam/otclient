@@ -62,19 +62,16 @@ local function normalizeEquipedGems(equipedGems)
     for _, domain in ipairs(domains) do
       local entry = equipedGems[domain]
       local gemId = type(entry) == "table" and tonumber(entry.gemID) or tonumber(entry)
-      -- Note: Gem ID 0 is valid! Only nil/false should become -1
       table.insert(normalized, gemId or -1)
     end
   else
     for _, value in ipairs(equipedGems) do
       local gemId = tonumber(value)
-      -- Note: Gem ID 0 is valid! Only nil/false should become -1
       table.insert(normalized, gemId or -1)
     end
     if #normalized == 0 then
       for _, value in pairs(equipedGems) do
         local gemId = tonumber(value)
-        -- Note: Gem ID 0 is valid! Only nil/false should become -1
         table.insert(normalized, gemId or -1)
       end
     end
@@ -699,7 +696,6 @@ function WheelOfDestiny.onDestinyWheel(playerId, canView, changeState, vocationI
     return
   end
 
-  -- Ensure presets are loaded from wheelOfDestiny.json
   if table.empty(WheelOfDestiny.internalPreset) then
     WheelOfDestiny.loadWheelPresets()
   end
@@ -724,7 +720,6 @@ function WheelOfDestiny.onDestinyWheel(playerId, canView, changeState, vocationI
 
   WheelOfDestiny.create(playerId, canView, changeState, vocationId, points, scrollPoints, pointInvested, usedPromotionScrolls, equipedGems, atelierGems, basicUpgraded, supremeUpgraded, earnedFromAchievements)
 
-  -- Update gem atelier vessel panel after create() has set the gems
   if GemAtelier and gemAtelierWindow and gemAtelierWindow:isVisible() then
     if GemAtelier.setupVesselPanel then
       GemAtelier.setupVesselPanel()
@@ -796,8 +791,7 @@ function WheelOfDestiny.onDestinyWheel(playerId, canView, changeState, vocationI
 end
 
 function WheelOfDestiny.onCreate(vocationId)
-	-- configure icons
-  for id, iconInfo in pairs(WheelIcons[vocationId]) do
+	for id, iconInfo in pairs(WheelIcons[vocationId]) do
     local widget = wheelPanel:recursiveGetChildById("icon"..id)
     local modIcon = widget:recursiveGetChildById("modIcon"..id)
 		
@@ -860,7 +854,6 @@ function WheelOfDestiny.onCreate(vocationId)
   local totalPoints = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
   wheelOfDestinyWindow.selection.points:setText(totalPoints - WheelOfDestiny.usedPoints .. " / ".. totalPoints)
 	
-  -- configure background
   wheelPanel:recursiveGetChildById('fullColorWheel_15'):setVisible(true)
   wheelPanel:recursiveGetChildById('fullColorWheel_16'):setVisible(true)
   wheelPanel:recursiveGetChildById('fullColorWheel_21'):setVisible(true)
@@ -1172,7 +1165,6 @@ function resetWheel(ignoreprotocol)
   WheelOfDestiny.passivePoints = table.reserve(4, 0)
 
   for index, connection in ipairs(WheelNodes) do
-    -- extremidades podem ser removidos
     if WheelOfDestiny.vocationId ~= 0 then
       local widget = wheelPanel:recursiveGetChildById("icon"..index)
       local modIcon = widget:recursiveGetChildById("modIcon"..index)
@@ -1206,9 +1198,6 @@ function resetWheel(ignoreprotocol)
   WheelOfDestiny.equipedGemBonuses = {}
   WheelOfDestiny.equipedGems = {-1, -1, -1, -1}
 
-  -- Note: Do NOT call setupVesselPanel here as equipedGems is empty at this point.
-  -- The vessel panel will be updated after create() sets the correct gems.
-  
   WheelOfDestiny.configureDedicationPerk()
   WheelOfDestiny.configureConvictionPerk()
   WheelOfDestiny.configureVessels()
@@ -1325,14 +1314,12 @@ function WheelOfDestiny.configureVessels()
     local widget = g_ui.createWidget("PerksPanel", container)
     widget:setHeight(20)
 
-    -- 🔹 Segurança: texto padrão
     if not data.text or data.text == "" then
       data.text = "(Unknown)"
     end
 
     widget.perk:setText(data.text)
 
-    -- 🔹 Valor (visibilidade e formatação)
     if data.value == -1 then
       widget.value:setVisible(false)
     else
@@ -1354,14 +1341,12 @@ function WheelOfDestiny.configureVessels()
       end
     end
 
-    -- 🔹 Tooltip
     if data.tooltip then
       widget.info:setVisible(true)
       widget.info:setTooltip(data.tooltip)
     end
   end
 
-  -- 🔹 Scrollbar visível apenas se necessário
   if scrollBar:getMaximum() > 0 then
     scrollBar:setVisible(true)
   end
@@ -1928,7 +1913,7 @@ function WheelOfDestiny.create(playerId, canView, changeState, vocationId, point
   end
 
   local function incrementBonusCount(bonus, bonusType)
-    -- Ignora valores inválidos ou nulos (0 e -1 significam "sem bônus")
+    -- Ignores invalid or null values (0 and -1 mean "no bonus")
     if type(bonus) ~= "number" or bonus <= 0 then
 
       return
@@ -2023,7 +2008,7 @@ function onWheelOfDestinyApply(close, ignoreprotocol)
     end
   
     g_logger.debug(string.format(
-      "[WheelApply] Enviando gems -> GREEN:%d  RED:%d  ACQUA:%d  PURPLE:%d",
+      "[WheelApply] Sending gems -> GREEN:%d  RED:%d  ACQUA:%d  PURPLE:%d",
       g, r, a, p))
   
     g_game.sendApplyWheelPoints(WheelOfDestiny.pointInvested, g, r, a, p)
@@ -2341,7 +2326,7 @@ function WheelOfDestiny.onImportConfig(base64Data)
 
   -- Avoid invalid base64 code
   if not base64.isValidBase64(base64Data) then
-    g_logger.error(string.format("[WheelOfDestiny.onImportConfig]: Invalid base64 string: %s", base64Data))
+    g_logger.debug(string.format("[WheelOfDestiny.onImportConfig]: Invalid base64 string: %s", base64Data))
     return {}
   end
 
@@ -2448,9 +2433,9 @@ function WheelOfDestiny.onExportPreset()
     local exportCode = WheelOfDestiny.getExportCode(WheelOfDestiny.currentPreset)
     if exportCode and exportCode ~= "" then
       g_window.setClipboardText(exportCode)
-      g_logger.info(string.format("[WheelOfDestiny] Export code copied to clipboard: %s", exportCode))
+      g_logger.debug(string.format("[WheelOfDestiny] Export code copied to clipboard: %s", exportCode))
     else
-      g_logger.error("[WheelOfDestiny] Failed to generate export code")
+      g_logger.debug("[WheelOfDestiny] Failed to generate export code")
     end
     
     return true
@@ -2458,7 +2443,7 @@ function WheelOfDestiny.onExportPreset()
 
   local urlButton = function()
     -- TODO: Implement URL export functionality
-    g_logger.info("[WheelOfDestiny] URL export - TODO: Not yet implemented")
+    g_logger.debug("[WheelOfDestiny] URL export - TODO: Not yet implemented")
     return true
   end
 

@@ -1,15 +1,9 @@
----------------------------
--- Lua code author: R1ck --
--- Company: VICTOR HUGO PERENHA - JOGOS ON LINE  --
----------------------------
-
 Workshop = {}
 Workshop.__index = Workshop
 
 fragmentList = {}
 currentWorkshopPage = 1
 
--- Helper function to match text (case-insensitive search)
 local function matchText(text, search)
 	if not text or not search then
 		return false
@@ -347,34 +341,34 @@ function Workshop.onSelectChild(list, selected)
 end
 
 
--- Envia ações de gemas (reveal, destroy, toggleLock, improve)
+-- Sends gem actions (reveal, destroy, toggleLock, improve)
 function sendgemAction(actionType, param, pos)
 	param = param or 0
 	pos = pos or 0
 
-	g_logger.debug(string.format("[GemAtelier] Enviando ação -> type=%d param=%d pos=%d", actionType, param, pos))
+	g_logger.debug(string.format("[GemAtelier] Sending action -> type=%d param=%d pos=%d", actionType, param, pos))
 	g_game.gemAction(actionType, param, pos)
 
 	if actionType == 3 then
-		-- Toggle Lock local após breve delay (até servidor retornar)
+		-- Toggle Lock locally after brief delay (until server returns)
 		scheduleEvent(function()
 			local gem = GemAtelier.getGemDataById(param)
 			if not gem then
-				g_logger.warning(string.format("[GemAtelier] Falha ao alternar lock: gem id=%d não encontrada.", param))
+				g_logger.debug(string.format("[GemAtelier] Failed to toggle lock: gem id=%d not found.", param))
 				return
 			end
 
-			-- Inverte corretamente (0 = unlocked, 1 = locked)
+			-- Inverts correctly (0 = unlocked, 1 = locked)
 			gem.locked = gem.locked == 1 and 0 or 1
-			g_logger.debug(string.format("[GemAtelier] Alternado lock local da gem id=%d -> %s", 
+			g_logger.debug(string.format("[GemAtelier] Toggled local lock of gem id=%d -> %s", 
 				param, gem.locked == 1 and "locked" or "unlocked"))
 
-			-- Atualiza visual do botão se visível
+			-- Updates button visual if visible
 			if lastSelectedGem and lastSelectedGem.locker then
 				lastSelectedGem.locker:setChecked(gem.locked == 1)
 			end
 
-			-- Recarrega lista mantendo o foco atual
+			-- Reloads list maintaining current focus
 			local lastIndex = lastSelectedGem and lastSelectedGem.gemIndex or 1
 			GemAtelier.showGems(false, lastIndex)
 		end, 300)
@@ -385,27 +379,25 @@ end
 function Workshop.onUpgradeModification(button)
     local selected = fragmentWindow:recursiveGetChildById('fragmentContent')
     if not selected or not button:isOn() then
-        g_logger.debug('[Workshop] Nenhum fragmento selecionado ou botão não ativo.')
+        g_logger.debug('[Workshop] No fragment selected or button not active.')
         return true
     end
 
     local selectedWidget = selected:getFocusedChild()
     if not selectedWidget then
-        g_logger.debug('[Workshop] Nenhum widget de modificação focado.')
+        g_logger.debug('[Workshop] No modification widget focused.')
         return true
     end
 
     local modID = selectedWidget.cache.modID or -1
     local supreme = selectedWidget.cache.supreme or false
 
-    -- Determina o tipo de fragmento: 0 = lesser, 1 = greater
     local fragmentType = supreme and 0 or 1
 
-    -- Determina o índice de posição (0..48 básico / 76..93 supreme)
     pos = modID
 
     g_logger.debug(string.format(
-        "[Workshop] Solicitando UpgradeModification -> action=4 | fragmentType=%d | pos=%d | supreme=%s",
+        "[Workshop] Requesting UpgradeModification -> action=4 | fragmentType=%d | pos=%d | supreme=%s",
         fragmentType, pos, tostring(supreme)
     ))
 

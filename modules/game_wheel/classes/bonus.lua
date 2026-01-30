@@ -120,7 +120,6 @@ WheelDomainOrder = {
 	[3] = {22, 23, 28, 24, 29, 34, 30, 35, 36}
 }
 
--- Helper function to truncate text to a specified length
 local function short_text(text, chars_limit)
 	if not text then
 		return ""

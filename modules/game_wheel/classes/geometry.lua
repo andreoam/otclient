@@ -10,7 +10,6 @@ function Circle.new(centerX, centerY, radius)
 end
 
 function Circle:inArea(point)
-    -- Calcula a distância do ponto ao centro do círculo
     local dx = point.x - self._centerX
     local dy = point.y - self._centerY
     return (dx * dx + dy * dy) <= (self._radius * self._radius)
@@ -35,15 +34,13 @@ function Circle:isPointInSlice(point, sliceIndex, totalSlices)
     local startAngle = sliceIndex * angleStep
     local endAngle = startAngle + angleStep
 
-    -- Calcula o ângulo do ponto
     local dx = point.x - self._centerX
     local dy = point.y - self._centerY
     local angle = math.atan2(dy, dx)
     if angle < 0 then
-        angle = angle + 2 * math.pi -- Normaliza para 0 a 2π
+        angle = angle + 2 * math.pi -- Normalizes to 0 to 2π
     end
 
-    -- Verifica se o ponto está dentro do ângulo da fatia e dentro do raio
     local distanceSquared = dx * dx + dy * dy
     return angle >= startAngle and angle <= endAngle and distanceSquared <= (self._radius * self._radius)
 end

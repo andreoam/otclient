@@ -21,15 +21,12 @@ function init()
   wheelWindow = g_ui.displayUI('wheel')
   mainPanel = wheelWindow:getChildById('mainPanel')
 
-  -- Wheel Menu
   wheelOfDestinyWindow = g_ui.loadUI('styles/wheelMenu', mainPanel)
   wheelOfDestinyWindow:hide()
 
-  -- Gem Menu
   gemAtelierWindow = g_ui.loadUI('styles/gemMenu', mainPanel)
   gemAtelierWindow:hide()
   
-  -- Conectar callbacks dos filtros de gem
   local affinitiesBox = gemAtelierWindow:recursiveGetChildById('affinitiesBox')
   local qualitiesBox = gemAtelierWindow:recursiveGetChildById('qualitiesBox')
   
@@ -49,15 +46,12 @@ function init()
     end
   end
 
-  -- Fragment Menu
   fragmentWindow = g_ui.loadUI('styles/fragmentMenu', mainPanel)
   fragmentWindow:hide()
 
-  -- New Preset Menu
   newPresetWindow = g_ui.displayUI('styles/newPreset')
   newPresetWindow:hide()
 
-  -- Rename Preset Window
   renamePresetWindow = g_ui.displayUI('styles/renamePreset')
   renamePresetWindow:hide()
 
@@ -88,7 +82,7 @@ function init()
     onGameEnd = onGameEnd,
     onGameStart = WheelOfDestiny.loadWheelPresets,
     onDestinyWheel = WheelOfDestiny.onDestinyWheel,
-    --onUnlockGem = GemAtelier.onUnlockGem, --desabilitado pois está em Todo
+    --onUnlockGem = GemAtelier.onUnlockGem, --disabled because it's in TODO
     onResourceBalance = onResourceBalance,
   })
   
@@ -104,7 +98,7 @@ function terminate()
     onGameEnd = onGameEnd,
     onGameStart = WheelOfDestiny.loadWheelPresets,
     onDestinyWheel = WheelOfDestiny.onDestinyWheel,
-    --onUnlockGem = GemAtelier.onUnlockGem, --desabilitado pois está em Todo
+    --onUnlockGem = GemAtelier.onUnlockGem, --disabled because it's in TODO
     onResourceBalance = onResourceBalance
   })
 
@@ -122,7 +116,6 @@ function toggle()
   else
     wheelWindow:focus()
     loadMenu('wheelMenu')
-    -- hide other windows
     if gemAtelierWindow:isVisible() then
       gemAtelierWindow:hide()
     end
@@ -179,7 +172,6 @@ function onWheelClick(position)
 end
 
 function loadMenu(menuId)
-  -- Garantir que o mouse não está capturado para permitir popups (ComboBox)
   wheelWindow:ungrabMouse()
   wheelWindow:ungrabKeyboard()
   
@@ -318,7 +310,7 @@ function loadConfigJson()
 		end)
 
 		if not status then
-			return g_logger.error("Error while reading characterdata file. Details: " .. result)
+			return g_logger.debug("Error while reading characterdata file. Details: " .. result)
 		end
 
 		SkillwheelStringsLibrary = result
