@@ -2700,31 +2700,9 @@ function WheelOfDestiny.onConfirmCreatePreset()
 
   wheelWindow:show(true)
   newPresetWindow:hide()
-  
-  -- Create the preset (this sets it as current)
   WheelOfDestiny.createPreset(presetName, dataCopy)
-  
-  -- Save to JSON file
+  WheelOfDestiny.configurePresets()
   WheelOfDestiny.saveWheelPresets()
-  
-  -- Switch to manage presets tab to ensure preset list is visible
-  toggleTabBarButtons('managePresetsButton')
-  
-  -- Rebuild preset list after a small delay to ensure tab is switched
-  scheduleEvent(function()
-    WheelOfDestiny.configurePresets()
-    
-    -- Find and manually focus the newly created preset to trigger selection
-    local presetPanel = wheelWindow:recursiveGetChildById("presetList")
-    if presetPanel then
-      for _, widget in ipairs(presetPanel:getChildren()) do
-        if widget.presetData and widget.presetData.presetName == presetName then
-          presetPanel:focusChild(widget)
-          break
-        end
-      end
-    end
-  end, 100)
 
 end
 
