@@ -39,10 +39,6 @@ ManaBar < ProgressBar
   image-border: 4
   background-color: #4444ff
 
-ProgressBarSD < UIProgressBarSD
-  height: 22
-  tooltip-delayed: true
-
 ProgressBarSD < UIProgressBar
   height: 22
   tooltip-delayed: true
