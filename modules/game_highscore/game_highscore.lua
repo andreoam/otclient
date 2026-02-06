@@ -52,7 +52,7 @@ end
 
 local function getVocation(arg)
     if type(arg) == "number" then
-    return vocationNamesByClientId[arg] or "All Vocations"
+         return vocationNamesByClientId[arg] or "All Vocations"
     elseif type(arg) == "string" then
         for id, name in pairs(vocationNamesByClientId) do
             if name == arg then
