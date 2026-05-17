@@ -61,7 +61,8 @@ function quickLootController:onGameStart()
     QuickLoot.lastSelectBag = nil
     QuickLoot.ErrorWindow = nil
 
-    quickLootController.ui.information.vipPanel.premium:setOn(not g_game.getLocalPlayer():isPremium())
+    local player = g_game.getLocalPlayer()
+    quickLootController.ui.information.vipPanel.premium:setOn(not (player and player:isPremium()))
     QuickLoot.load()
 
     g_game.requestQuickLootBlackWhiteList(getFilter(QuickLoot.data.filter),
@@ -160,8 +161,12 @@ function QuickLoot.Define()
     end
 
     function QuickLoot.load()
+        local player = g_game.getLocalPlayer()
+        if not player then
+            return
+        end
         local file = string.format("/settings/%s_containers.json",
-            g_game.getLocalPlayer():getName():lower():gsub("%s+", "_"))
+            player:getName():lower():gsub("%s+", "_"))
 
         if g_resources.fileExists(file) then
             local status, result = pcall(function()
@@ -334,7 +339,12 @@ function QuickLoot.Define()
         end
 
         QuickLoot.mouseGrabberWidget:grabMouse()
-        g_mouse.pushCursor("target")
+        -- Use native cursor when enabled, otherwise use custom cursor
+        if modules.client_options and modules.client_options.getOption('nativeCursor') then
+            g_window.setSystemCursor('cross')
+        else
+            g_mouse.pushCursor("target")
+        end
 
         QuickLoot.lastSelectBag = self:getParent()
         QuickLoot.actionsId = self.Select
@@ -397,7 +407,12 @@ function QuickLoot.Define()
             quickLootController.ui:show()
         end
 
-        g_mouse.popCursor("target")
+        -- Restore cursor
+        if modules.client_options and modules.client_options.getOption('nativeCursor') then
+            g_window.restoreMouseCursor()
+        else
+            g_mouse.popCursor("target")
+        end
         self:ungrabMouse()
 
         return true

@@ -63,6 +63,7 @@ void Game::resetGameStates()
     m_mapUpdatedAt = 0;
     m_mapUpdateTimer = { true, Timer{} };
     setCanReportBugs(false);
+    setCanExivaOptions(false);
     m_fightMode = Otc::FightBalanced;
     m_chaseMode = Otc::DontChase;
     m_pvpMode = Otc::WhiteDove;
@@ -497,9 +498,9 @@ void Game::processModalDialog(const uint32_t id, const std::string_view title, c
     g_lua.callGlobalField("g_game", "onModalDialog", id, title, message, buttonList, enterButton, escapeButton, choiceList, priority);
 }
 
-void Game::processItemDetail(const uint32_t itemId, const std::vector<std::tuple<std::string, std::string>>& descriptions)
+void Game::processItemDetail(const ItemInspectionData& data)
 {
-    g_lua.callGlobalField("g_game", "onParseItemDetail", itemId, descriptions);
+    g_lua.callGlobalField("g_game", "onParseItemDetail", data);
 }
 
 void Game::processCyclopediaCharacterGeneralStats(const CyclopediaCharacterGeneralStats& stats, const std::vector<std::vector<uint16_t>>& skills,
@@ -519,6 +520,16 @@ void Game::processCyclopediaCharacterGeneralStatsBadge(const uint8_t showAccount
                                                 const std::string_view loyaltyTitle, const std::vector<std::tuple<uint32_t, std::string>>& badgesVector)
 {
     g_lua.callGlobalField("g_game", "onParseCyclopediaCharacterBadges", showAccountInformation, playerOnline, playerPremium, loyaltyTitle, badgesVector);
+}
+
+void Game::processCyclopediaCharacterInspection(const CyclopediaCharacterInspection& data)
+{
+    g_lua.callGlobalField("g_game", "onParseCyclopediaCharacterInspection", data);
+}
+
+void Game::processInspectionState(const uint32_t creatureId, const uint8_t state)
+{
+    g_lua.callGlobalField("g_game", "onInspectionState", creatureId, state);
 }
 
 void Game::processCyclopediaCharacterItemSummary(const CyclopediaCharacterItemSummary& data)
@@ -1836,6 +1847,23 @@ void Game::sendForgeBrowseHistoryRequest(uint16_t page)
     m_protocolGame->sendForgeBrowseHistoryRequest(page);
 }
 
+void Game::sendExivaOptions(
+    const bool allowAll, const bool allowOwnGuild, const bool allowOwnParty,
+    const bool allowVipList, const bool allowPlayerWhitelist, const bool allowGuildWhitelist,
+    const std::vector<std::string>& characterWhiteList,
+    const std::vector<std::string>& removeCharacter,
+    const std::vector<std::string>& guildWhiteList,
+    const std::vector<std::string>& removeGuild)
+{
+    if (!canPerformGameAction() || !canExivaOptions())
+        return;
+
+    m_protocolGame->sendExivaRestrictions(
+        allowAll, allowOwnGuild, allowOwnParty, allowVipList,
+        allowPlayerWhitelist, allowGuildWhitelist,
+        characterWhiteList, removeCharacter, guildWhiteList, removeGuild);
+}
+
 void Game::applyImbuement(const uint8_t slot, const uint32_t imbuementId, const bool protectionCharm)
 {
     if (!canPerformGameAction())
@@ -1991,6 +2019,17 @@ void Game::inspectionObject(const Otc::InspectObjectTypes inspectionType, const 
     m_protocolGame->sendInspectionObject(inspectionType, itemId, itemCount);
 }
 
+void Game::inspectCharacter(const uint32_t creatureId, const uint8_t tab)
+{
+    if (!canPerformGameAction())
+        return;
+
+    if (creatureId == 0)
+        return;
+    
+    m_protocolGame->sendInspectCharacter(creatureId, tab);
+}
+
 void Game::requestBestiary()
 {
     if (!canPerformGameAction())
@@ -2095,12 +2134,18 @@ void Game::requestGetRewardDaily(const uint8_t bonusShrine, const std::map<uint1
     m_protocolGame->sendGetRewardDaily(bonusShrine, items);
 }
 
-void Game::sendRequestTrackerQuestLog(const std::map<uint16_t, std::string>& quests)
+void Game::sendRequestTrackerQuestLog(const std::vector<uint16_t>& missionIds, const bool autoTrackNewQuests, const bool autoUntrackCompletedQuests, const uint8_t extra)
 {
-    if (!canPerformGameAction())
+    if (!canPerformGameAction()) {
         return;
+    }
 
-    m_protocolGame->sendRequestTrackerQuestLog(quests);
+    m_protocolGame->sendRequestTrackerQuestLog(
+        missionIds,
+        autoTrackNewQuests,
+        autoUntrackCompletedQuests,
+        extra
+    );
 }
 
 void Game::processCyclopediaCharacterOffenceStats(const CyclopediaCharacterOffenceStats& data)

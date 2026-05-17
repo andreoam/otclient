@@ -31,7 +31,9 @@
 #include "framework/core/filestream.h"
 #include "framework/core/resourcemanager.h"
 #include "framework/otml/otmldocument.h"
+#ifdef FRAMEWORK_PROTOBUF
 #include <staticdata.pb.h>
+#endif
 
 #ifdef FRAMEWORK_EDITOR
 #include "itemtype.h"
@@ -144,7 +146,15 @@ bool ThingTypeManager::loadOtml(std::string file)
 
 bool ThingTypeManager::loadAppearances(const std::string& file)
 {
+#ifdef FRAMEWORK_PROTOBUF
     try {
+        try {
+            m_assetIdentifier = g_resources.readFileContents(g_resources.resolvePath(g_resources.guessFilePath(file + "assets", "json.sha256")));
+        } catch (const std::exception& e) {
+            m_assetIdentifier = "appearancesHash";
+            g_logger.warning("Cannot load asset hash identifier from assets.json.sha256: {}", e.what());
+        }
+
         if (!g_game.getFeature(Otc::GameLoadSprInsteadProtobuf)) {
             g_spriteAppearances.unload();
             int spritesCount = 0;
@@ -222,8 +232,13 @@ bool ThingTypeManager::loadAppearances(const std::string& file)
         g_logger.error("Failed to load '{}' (Appearances): {}", file, e.what());
         return false;
     }
+#else
+    g_logger.error("Protobuf not supported in this build. Enable FRAMEWORK_PROTOBUF");
+    return false;
+#endif
 }
 
+#ifdef FRAMEWORK_PROTOBUF
 namespace {
     using RaceBank = google::protobuf::RepeatedPtrField<staticdata::Creature>;
 
@@ -299,6 +314,13 @@ bool ThingTypeManager::loadStaticData(const std::string& file)
 
     return false;
 }
+#else
+bool ThingTypeManager::loadStaticData(const std::string& file)
+{
+    g_logger.error("Protobuf not supported in this build. Enable FRAMEWORK_PROTOBUF");
+    return false;
+}
+#endif
 
 const ThingTypeList& ThingTypeManager::getThingTypes(const ThingCategory category)
 {

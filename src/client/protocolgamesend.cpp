@@ -29,6 +29,10 @@
 #include "thingtype.h"
 #include "framework/util/crypt.h"
 
+#ifndef USE_PRECOMPILED_HEADERS
+#include <algorithm>
+#endif
+
 void ProtocolGame::onSend() {}
 void ProtocolGame::sendExtendedOpcode(const uint8_t opcode, const std::string& buffer)
 {
@@ -59,7 +63,7 @@ void ProtocolGame::sendLoginPacket(const uint32_t challengeTimestamp, const uint
     }
 
     if (g_game.getClientVersion() >= 1334) {
-        msg->addString("appearancesHash");
+        msg->addString(g_things.getAssetIdentifier());
     } else if (g_game.getFeature(Otc::GameContentRevision)) {
         msg->addU16(g_things.getContentRevision());
     }
@@ -767,17 +771,23 @@ void ProtocolGame::sendRequestBless()
     send(msg);
 }
 
-void ProtocolGame::sendRequestTrackerQuestLog(const std::map<uint16_t, std::string>& quests)
+void ProtocolGame::sendRequestTrackerQuestLog(const std::vector<uint16_t>& missionIds, const bool autoTrackNewQuests, const bool autoUntrackCompletedQuests, const uint8_t extra)
 {
     const auto msg = std::make_shared<OutputMessage>();
     msg->addU8(Proto::ClientRequestTrackerQuestLog);
-    msg->addU8(static_cast<uint8_t>(quests.size()));
-    for (const auto& [questId, questName] : quests) {
-        msg->addU16(questId);
-        if (g_game.getClientVersion() >= 1410) {
-            msg->addString(questName);
-        }
+    const auto missionCount = std::min(missionIds.size(), static_cast<size_t>(255));
+    msg->addU8(static_cast<uint8_t>(missionCount));
+
+    for (size_t i = 0; i < missionCount; ++i) {
+        msg->addU16(missionIds[i]);
     }
+
+    if (g_game.getClientVersion() >= 1410) {
+        msg->addU8(autoTrackNewQuests ? 1 : 0);
+        msg->addU8(autoUntrackCompletedQuests ? 1 : 0);
+        msg->addU8(extra);
+    }
+
     send(msg);
 }
 
@@ -1062,7 +1072,9 @@ void ProtocolGame::sendInspectionNormalObject(const Position& position)
 
 void ProtocolGame::sendInspectionObject(const Otc::InspectObjectTypes inspectionType, const uint16_t itemId, const uint8_t itemCount)
 {
-    if (inspectionType != Otc::INSPECT_NPCTRADE && inspectionType != Otc::INSPECT_CYCLOPEDIA) {
+    if (inspectionType != Otc::INSPECT_NPCTRADE &&
+        inspectionType != Otc::INSPECT_CYCLOPEDIA &&
+        inspectionType != Otc::INSPECT_PROFICIENCY) {
         return;
     }
 
@@ -1078,6 +1090,15 @@ void ProtocolGame::sendRequestBestiary()
 {
     const auto& msg = std::make_shared<OutputMessage>();
     msg->addU8(Proto::ClientBestiaryRequest);
+    send(msg);
+}
+
+void ProtocolGame::sendInspectCharacter(const uint32_t creatureId, const uint8_t tab)
+{
+    const auto& msg = std::make_shared<OutputMessage>();
+    msg->addU8(Proto::ClientInspectionCharacter);
+    msg->addU8(tab);
+    msg->addU32(creatureId);
     send(msg);
 }
 
@@ -1461,6 +1482,47 @@ void ProtocolGame::sendForgeBrowseHistoryRequest(uint16_t page) {
     send(msg);
 }
 
+void ProtocolGame::sendExivaRestrictions(
+    const bool allowAll, const bool allowOwnGuild, const bool allowOwnParty,
+    const bool allowVipList, const bool allowPlayerWhitelist, const bool allowGuildWhitelist,
+    const std::vector<std::string>& characterWhiteList,
+    const std::vector<std::string>& removeCharacter,
+    const std::vector<std::string>& guildWhiteList,
+    const std::vector<std::string>& removeGuild)
+{
+    if (!g_game.canExivaOptions())
+        return;
+
+    const auto& msg = std::make_shared<OutputMessage>();
+    // Opcode 202 is ClientExivaRestrictions in protocol > 11.00
+    msg->addU8(Proto::ClientRefreshContainer);
+
+    msg->addU8(allowAll ? 1 : 0);
+    msg->addU8(allowOwnGuild ? 1 : 0);
+    msg->addU8(allowOwnParty ? 1 : 0);
+    msg->addU8(allowVipList ? 1 : 0);
+    msg->addU8(allowPlayerWhitelist ? 1 : 0);
+    msg->addU8(allowGuildWhitelist ? 1 : 0);
+
+    msg->addU16(static_cast<uint16_t>(characterWhiteList.size()));
+    for (const auto& name : characterWhiteList)
+        msg->addString(name);
+
+    msg->addU16(static_cast<uint16_t>(removeCharacter.size()));
+    for (const auto& name : removeCharacter)
+        msg->addString(name);
+
+    msg->addU16(static_cast<uint16_t>(guildWhiteList.size()));
+    for (const auto& name : guildWhiteList)
+        msg->addString(name);
+
+    msg->addU16(static_cast<uint16_t>(removeGuild.size()));
+    for (const auto& name : removeGuild)
+        msg->addString(name);
+
+    send(msg);
+}
+
 void ProtocolGame::sendApplyImbuement(const uint8_t slot, const uint32_t imbuementId, const bool protectionCharm)
 {
     const auto& msg = std::make_shared<OutputMessage>();
@@ -1520,7 +1582,7 @@ void ProtocolGame::sendOpenRewardHistory()
 void ProtocolGame::sendGetRewardDaily(const uint8_t bonusShrine, const std::map<uint16_t, uint8_t>& items)
 {
     const auto& msg = std::make_shared<OutputMessage>();
-    msg->addU8(Proto::sendGetRewardDaily);
+    msg->addU8(Proto::ClientGetRewardDaily);
     msg->addU8(bonusShrine);
     msg->addU8(items.size());
     for (const auto& [itemId, count] : items) {

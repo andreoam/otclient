@@ -99,7 +99,7 @@ public:
     void sendCancelAttackAndFollow();
     void sendRefreshContainer(uint8_t containerId);
     void sendRequestBless();
-    void sendRequestTrackerQuestLog(const std::map<uint16_t, std::string>& quests);
+    void sendRequestTrackerQuestLog(const std::vector<uint16_t>& missionIds, bool autoTrackNewQuests, bool autoUntrackCompletedQuests, uint8_t extra);
     void sendRequestOutfit();
     void sendTyping(bool typing);
     void sendChangeOutfit(const Outfit& outfit);
@@ -139,6 +139,12 @@ public:
     void sendOpenPortableForge();
     void sendForgeRequest(Otc::ForgeAction_t actionType, bool convergence = false, uint16_t firstItemid = 0, uint8_t firstItemTier = 0, uint16_t secondItemId = 0, bool improveChance = false, bool tierLoss = false);
     void sendForgeBrowseHistoryRequest(uint16_t page);
+    void sendExivaRestrictions(bool allowAll, bool allowOwnGuild, bool allowOwnParty, bool allowVipList,
+                               bool allowPlayerWhitelist, bool allowGuildWhitelist,
+                               const std::vector<std::string>& characterWhiteList,
+                               const std::vector<std::string>& removeCharacter,
+                               const std::vector<std::string>& guildWhiteList,
+                               const std::vector<std::string>& removeGuild);
     void sendApplyImbuement(uint8_t slot, uint32_t imbuementId, bool protectionCharm);
     void sendClearImbuement(uint8_t slot);
     void sendCloseImbuingWindow();
@@ -167,6 +173,7 @@ public:
     void openContainerQuickLoot(uint8_t action, uint8_t category, const Position& pos, uint16_t itemId, uint8_t stackpos, bool useMainAsFallback);
     void sendInspectionNormalObject(const Position& position);
     void sendInspectionObject(Otc::InspectObjectTypes inspectionType, uint16_t itemId, uint8_t itemCount);
+    void sendInspectCharacter(uint32_t creatureId, uint8_t tab);
 
     // Wheel of Destiny
     void sendOpenWheel(uint32_t playerId);
@@ -245,6 +252,7 @@ private:
     void parseBosstiaryInfo(const InputMessagePtr& msg);
     void parseTakeScreenshot(const InputMessagePtr& msg);
     void parseCyclopediaItemDetail(const InputMessagePtr& msg);
+    void parseInspectionState(const InputMessagePtr& msg);
     void parseAddInventoryItem(const InputMessagePtr& msg);
     void parseRemoveInventoryItem(const InputMessagePtr& msg);
     void parseOpenNpcTrade(const InputMessagePtr& msg);
@@ -306,6 +314,7 @@ private:
     void parseQuestTracker(const InputMessagePtr& msg);
     void parseKillTracker(const InputMessagePtr& msg);
     void parseOpenOutfitWindow(const InputMessagePtr& msg) const;
+    void parseExivaRestrictions(const InputMessagePtr& msg);
     void parseVipAdd(const InputMessagePtr& msg);
     void parseVipState(const InputMessagePtr& msg);
     void parseVipLogout(const InputMessagePtr& msg);
@@ -339,6 +348,7 @@ private:
     void parsePassiveCooldown(const InputMessagePtr& msg);
     void parseClientCheck(const InputMessagePtr& msg);
     void parseGameNews(const InputMessagePtr& msg);
+    void parseCloseDepotSearch(const InputMessagePtr& /*msg*/);
     void parseBlessDialog(const InputMessagePtr& msg);
     void parseRestingAreaState(const InputMessagePtr& msg);
     void parseUpdateImpactTracker(const InputMessagePtr& msg);
