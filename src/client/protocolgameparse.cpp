@@ -6512,11 +6512,11 @@ void ProtocolGame::parseWeaponProficiencyInfo(const InputMessagePtr& msg)
     const uint16_t itemId = msg->getU16();
     const uint32_t experience = msg->getU32();
     const uint8_t perksCount = msg->getU8();
-    std::vector<std::pair<uint8_t, uint8_t>> perks;
+    std::vector<std::vector<uint8_t>> perks;
     for (int i = 0; i < perksCount; ++i) {
         const uint8_t level = msg->getU8();
         const uint8_t perkPosition = msg->getU8();
-        perks.emplace_back(level, perkPosition);
+        perks.push_back({ level, perkPosition });
     }
     constexpr uint16_t MarketCategoryWeaponsAll = 32;
     uint16_t marketCategory = MarketCategoryWeaponsAll;

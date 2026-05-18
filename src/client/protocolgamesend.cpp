@@ -1715,16 +1715,17 @@ void ProtocolGame::sendWeaponProficiencyAction(const uint8_t actionType, const u
     send(msg);
 }
 
-void ProtocolGame::sendWeaponProficiencyApply(const uint16_t itemId, const std::vector<std::pair<uint8_t, uint8_t>>& perks)
+void ProtocolGame::sendWeaponProficiencyApply(const uint16_t itemId, const std::vector<uint8_t>& levels, const std::vector<uint8_t>& perkPositions)
 {
     const auto msg = std::make_shared<OutputMessage>();
     msg->addU8(Proto::ClientWeaponProficiency);
     msg->addU8(Otc::WEAPON_PROFICIENCY_APPLY_PERKS);
     msg->addU16(itemId);
-    msg->addU8(static_cast<uint8_t>(perks.size()));
-    for (const auto& perk : perks) {
-        msg->addU8(perk.first);
-        msg->addU8(perk.second);
+    const size_t count = std::min(levels.size(), perkPositions.size());
+    msg->addU8(static_cast<uint8_t>(count));
+    for (size_t i = 0; i < count; ++i) {
+        msg->addU8(levels[i]);
+        msg->addU8(perkPositions[i]);
     }
     send(msg);
 }
