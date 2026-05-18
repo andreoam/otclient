@@ -190,10 +190,6 @@ message AppearanceFlags {
 	optional AppearanceFlagTransparencyLevel transparencylevel = 72;
 }
 
-message AppearanceFlagProficiency {
-  optional uint32 id = 1;
-}
-
 message AppearanceFlagUpgradeClassification {
 	optional uint32 upgrade_classification = 1;
 }
@@ -289,12 +285,12 @@ message SpecialMeaningAppearanceIds {
 	optional uint32 supply_stash_id = 6;
 }
 
+message AppearanceFlagProficiency {
+  optional uint32 proficiency_id = 1;
+}
+
 enum FIXED_FRAME_GROUP {
 	FIXED_FRAME_GROUP_OUTFIT_IDLE = 0;
 	FIXED_FRAME_GROUP_OUTFIT_MOVING = 1;
 	FIXED_FRAME_GROUP_OBJECT_INITIAL = 2;
-}
-
-message AppearanceFlagProficiency {
-  optional uint32 proficiency_id = 1;
 }
