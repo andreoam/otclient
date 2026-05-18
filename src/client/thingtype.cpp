@@ -433,7 +433,7 @@ void ThingType::applyAppearanceFlags(const appearances::AppearanceFlags& flags)
     }
 
     if (flags.has_deco_kit() && flags.deco_kit()) {
-        m_flags |= ThingFlagAttrExpireStop;
+        m_flags |= ThingFlagAttrDecoKit;
     }
 
     // proficiency flag
@@ -814,7 +814,7 @@ const TexturePtr& ThingType::getTexture(const int animationPhase)
             m_loading.store(false, std::memory_order_release);
         };
 
-        g_asyncDispatcher.detach_task(std::move(action));
+        g_asyncDispatcher->detach_task(std::move(action));
     }
 
     return m_textureNull;
