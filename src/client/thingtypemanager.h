@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include "staticdata.h"
 
@@ -39,7 +39,7 @@ public:
     bool loadOtml(std::string file);
     bool loadAppearances(const std::string& file);
     bool loadStaticData(const std::string& file);
-    bool loadProficiencies(const std::string& file);
+    bool resolveProficienciesFile(const std::string& file);
 
 #ifdef FRAMEWORK_EDITOR
     void parseItemType(uint16_t id, pugi::xml_node node);
@@ -64,7 +64,7 @@ public:
 #endif
 
     ThingTypeList findThingTypeByAttr(ThingAttr attr, ThingCategory category);
-    ThingTypeList getProficiencyThings();
+    const ThingTypeList& getProficiencyThings();
     std::string getCyclopediaItemName(uint16_t id);
     std::string getProficienciesFile();
 
@@ -88,6 +88,7 @@ public:
 private:
     const nlohmann::json& getCatalogContent(const std::string& file);
     void clearCatalogContent();
+    void buildProficiencyCache();
 
     ThingTypeList m_thingTypes[ThingLastCategory];
     RaceList m_monsterRaces;
@@ -100,9 +101,10 @@ private:
     uint16_t m_contentRevision{ 0 };
     std::string m_assetIdentifier;
     std::string m_proficienciesFile;
-    std::string m_catalogContentBasePath;
     std::string m_catalogContentPath;
-    nlohmann::json m_catalogContent;
+    std::unique_ptr<nlohmann::json> m_catalogContent;
+    ThingTypeList m_proficiencyThingsCache;
+    bool m_proficiencyThingsCacheDirty{ true };
 
 #ifdef FRAMEWORK_EDITOR
     ItemTypePtr m_nullItemType;

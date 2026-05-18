@@ -112,6 +112,7 @@ public:
     uint32_t getWeaponType() const { return Thing::getWeaponType(); }
     uint32_t getMinimumLevel() const { return Thing::getMinimumLevel(); }
     uint32_t getImbueSlots() const { return Thing::getImbueSlots(); }
+    std::vector<uint32_t> getRestrictVocation() const { return Thing::getRestrictVocation(); }
 
     void setAsync(const bool enable) { m_async = enable; }
 

@@ -47,7 +47,6 @@ enum ITEM_CATEGORY {
 }
 
 enum PLAYER_PROFESSION {
-	PLAYER_PROFESSION_ANY = -1;
 	PLAYER_PROFESSION_NONE = 0;
 	PLAYER_PROFESSION_KNIGHT = 1;
 	PLAYER_PROFESSION_PALADIN = 2;
@@ -57,16 +56,6 @@ enum PLAYER_PROFESSION {
 	PLAYER_PROFESSION_PROMOTED = 10;
 }
 
-enum VOCATION {
-	VOCATION_ANY = -1;
-	VOCATION_NONE = 0;
-	VOCATION_KNIGHT = 1;
-	VOCATION_PALADIN = 2;
-	VOCATION_SORCERER = 3;
-	VOCATION_DRUID = 4;
-	VOCATION_MONK = 5;
-	VOCATION_PROMOTED = 10;
-}
 
 enum WEAPON_TYPE {
 	WEAPON_TYPE_NOWEAPON = 0;
@@ -208,7 +197,7 @@ message AppearanceFlags {
 	optional bool dual_wielding = 59;
 	optional AppearanceFlagImbueable imbueable = 60;
 	optional AppearanceFlagProficiency proficiency = 61;
-	repeated VOCATION restrict_to_vocation = 62;
+	repeated PLAYER_PROFESSION restrict_to_vocation = 62;
 	optional uint32 minimum_level = 63;
 	optional WEAPON_TYPE weapon_type = 64;
 	reserved 65, 66, 67, 68, 69;

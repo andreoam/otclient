@@ -50,26 +50,11 @@ local WEAPON_KEYWORDS = {
     rod = { "rod" },
 }
 
-local DEFAULT_PROFICIENCIES_FILE = "/json/proficiencies.json"
-
 local function resolveProficienciesFile()
-    if not g_game.getFeature(GameProficiency) then
-        return nil
+    local file = g_things.getProficienciesFile()
+    if file and file ~= "" then
+        return file
     end
-
-    if g_things and g_things.getProficienciesFile then
-        local file = g_things.getProficienciesFile()
-        if file and file ~= "" then
-            return file
-        end
-
-    end
-
-    if g_resources.fileExists(DEFAULT_PROFICIENCIES_FILE) then
-        g_logger.warning("[game_proficiency] The proficiencies-<hash>.json file was not found in the assets folder. A generic JSON file will be used: " .. DEFAULT_PROFICIENCIES_FILE)
-        return DEFAULT_PROFICIENCIES_FILE
-    end
-
     return nil
 end
 

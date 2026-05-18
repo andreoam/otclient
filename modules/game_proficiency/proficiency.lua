@@ -233,6 +233,12 @@ function terminate()
 end
 
 function onGameStart()
+    if not g_game.getFeature(GameProficiency) then
+        scheduleEvent(function()
+            g_modules.getModule("game_proficiency"):unload()
+        end, 100)
+        return
+    end
     WeaponProficiency.allProficiencyRequested = false
     WeaponProficiency.saveWeaponMissing = false
     WeaponProficiency.firstItemRequested = nil
@@ -248,8 +254,7 @@ function onGameStart()
     
     -- Add button to main panel (only for clients that support proficiency system)
     -- Use addToggleButton for notification support (20x40 vertical image)
-    if modules.game_mainpanel and g_game.getFeature(GameProficiency) then
-        WeaponProficiency.button = modules.game_mainpanel.addToggleButton(
+    WeaponProficiency.button = modules.game_mainpanel.addToggleButton(
             'ProficiencyButton', 
             tr('Open Weapon Proficiency'),
             '/images/options/button_proficiency',
@@ -258,10 +263,9 @@ function onGameStart()
             21, -- index for ordering
             true -- vertical image (20x40)
         )
-        if WeaponProficiency.button then
-            local btn = WeaponProficiency.button:getChildById('button')
-            if btn then btn:setOn(false) end
-        end
+    if WeaponProficiency.button then
+        local btn = WeaponProficiency.button:getChildById('button')
+        if btn then btn:setOn(false) end
     end
     
     -- Initialize topbar proficiency widget
@@ -276,7 +280,7 @@ function initTopBarProficiency(attempts)
     -- Delay initialization to ensure StatsBar is fully loaded
     scheduleEvent(function()
         -- Access StatsBar through modules.game_interface
-        local StatsBarModule = modules.game_interface and modules.game_interface.StatsBar
+        local StatsBarModule = modules.game_interface.StatsBar
         if not StatsBarModule then 
             if attempts < maxRetries then
                 scheduleEvent(initTopBarProficiency, 500, attempts + 1)
@@ -288,21 +292,18 @@ function initTopBarProficiency(attempts)
         if statsBar then
             local profWidget = statsBar:recursiveGetChildById('proficiencyTopBar')
             if profWidget then
-                local shouldShow = g_game.getClientVersion() >= 1500
-                profWidget:setVisible(shouldShow)
+                profWidget:setVisible(true)
                 
-                if shouldShow then
-                    -- Request proficiency data for equipped weapon
-                    local player = g_game.getLocalPlayer()
-                    if player then
-                        local leftSlotItem = player:getInventoryItem(InventorySlotLeft)
-                        if leftSlotItem and g_game.sendWeaponProficiencyAction then
-                            local itemId = leftSlotItem:getId()
-                            g_game.sendWeaponProficiencyAction(0, itemId)
-                        end
+                -- Request proficiency data for equipped weapon
+                local player = g_game.getLocalPlayer()
+                if player then
+                    local leftSlotItem = player:getInventoryItem(InventorySlotLeft)
+                    if leftSlotItem then
+                        local itemId = leftSlotItem:getId()
+                        g_game.sendWeaponProficiencyAction(0, itemId)
                     end
-                    updateTopBarProficiency()
                 end
+                updateTopBarProficiency()
             end
         else
             if attempts < maxRetries then
@@ -315,7 +316,7 @@ end
 -- Update the proficiency progress bar in the top bar
 function updateTopBarProficiency()
     -- Access StatsBar through modules.game_interface
-    local StatsBarModule = modules.game_interface and modules.game_interface.StatsBar
+    local StatsBarModule = modules.game_interface.StatsBar
     if not StatsBarModule then return end
     
     local statsBar = StatsBarModule.getCurrentStatsBarWithPosition and StatsBarModule.getCurrentStatsBarWithPosition()
@@ -394,10 +395,7 @@ function updateTopBarProficiency()
         WeaponProficiency.currentEquippedExp = exp
         WeaponProficiency.currentEquippedMaxExp = nextLevelExp
     else
-        -- No cache data yet - request it
-        if g_game.sendWeaponProficiencyAction then
-            g_game.sendWeaponProficiencyAction(0, itemId)
-        end
+        g_game.sendWeaponProficiencyAction(0, itemId)
     end
 end
 
@@ -478,8 +476,8 @@ function onWeaponProficiency(itemId, experience, perks, marketCategory)
     updateTopBarProficiency()
 end
 
--- Called when server sends proficiency experience update (opcode 0x5C)
 function onWeaponProficiencyExperience(itemId, experience, hasUnusedPerk)
+print("a")
     local itemCache = WeaponProficiency.cacheList[itemId]
     if not itemCache then
         WeaponProficiency.cacheList[itemId] = { exp = experience, perks = {} }
@@ -512,12 +510,19 @@ end
 
 -- Update the proficiency button highlight based on unused perk state
 function updateProficiencyHighlight()
+    print(1)
     if WeaponProficiency.button then
+    print(2)
+
         local highlight = WeaponProficiency.button:getChildById('highlight')
         local bright = WeaponProficiency.button:getChildById('brightButton')
         local shouldShow = WeaponProficiency.hasUnusedPerk == true
-        if highlight then highlight:setVisible(shouldShow) end
-        if bright then bright:setVisible(shouldShow) end
+        if highlight then highlight:setVisible(shouldShow) 
+        print(4)
+        end
+        if bright then bright:setVisible(shouldShow)
+        print(5)
+         end
     end
 end
 
@@ -742,7 +747,7 @@ function requestOpenWindow(redirectItem)
     -- Check left hand slot for equipped weapon
     local leftSlotItem = getLeftSlotItem()
     if leftSlotItem then
-        local weaponType = leftSlotItem.getWeaponType and leftSlotItem:getWeaponType() or 0
+        local weaponType = leftSlotItem:getWeaponType() or 0
         if weaponType > 0 then
             category = getWeaponCategoryString(weaponType)
             targetItemId = leftSlotItem:getId()
@@ -750,7 +755,7 @@ function requestOpenWindow(redirectItem)
     end
     
     if redirectItem then
-        local weaponType = redirectItem.getWeaponType and redirectItem:getWeaponType() or 0
+        local weaponType = redirectItem:getWeaponType() or 0
         if weaponType > 0 then
             category = getWeaponCategoryString(weaponType)
             targetItemId = redirectItem:getId()
@@ -927,7 +932,7 @@ function WeaponProficiency:createItemCache()
             end
 
             local name = marketData and marketData.name or nil
-            if (not name or name == "") and g_things.getCyclopediaItemName then
+            if (not name or name == "") then
                 name = g_things.getCyclopediaItemName(originalId)
             end
             if not name or name == "" then
@@ -1020,7 +1025,7 @@ function isMasteryAchieved(displayItem, cacheId, thingType)
     local currentExperience = weaponEntry and weaponEntry.exp or 0
     
     -- Get proficiency data
-    local tt = thingType or (displayItem.getThingType and displayItem:getThingType())
+    local tt = thingType or displayItem:getThingType()
     local proficiencyId = ProficiencyData:getProficiencyIdForItem(displayItem, tt)
     local perkCount = ProficiencyData:getPerkLaneCount(proficiencyId)
     local maxExperience = ProficiencyData:getMaxExperience(perkCount, displayItem, tt)
@@ -1030,7 +1035,7 @@ end
 
 -- Get unknown market category for item
 function getUnknownMarketCategory(itemType)
-    local weaponType = itemType.getWeaponType and itemType:getWeaponType() or 0
+    local weaponType = itemType:getWeaponType() or 0
     if WeaponCategoryToString[weaponType] then
         return weaponType
     end
@@ -1090,13 +1095,6 @@ function WeaponProficiency:updateExperienceProgress(currentExp, displayItem)
     if totalProgressWidget then
         totalProgressWidget:setPercent(ProficiencyData:getTotalPercent(currentExp, perkCount, displayItem, thingType))
     end
-end
-
--- Helper function to format numbers with comma separators
-function comma_value(n)
-    if not n then return "0" end
-    local left, num, right = string.match(tostring(n), '^([^%d]*%d)(%d*)(.-)$')
-    return left .. (num:reverse():gsub('(%d%d%d)', '%1,'):reverse()) .. right
 end
 
 -- Toggle filter option (Level, Voc, 1H, 2H buttons)
@@ -1215,7 +1213,7 @@ function WeaponProficiency:refreshItemList()
             local displayId = marketItem.displayId or marketItem.originalId
             local cacheId = marketItem.originalId or displayId
             itemWidget:setItemId(displayId)
-            
+            ItemsDatabase.setRarityItem(itemWidget, itemWidget:getItem())
             -- Add tooltip with item name
             child:setTooltip(marketItem.marketData.name or "")
             
@@ -1378,9 +1376,7 @@ function WeaponProficiency:selectItem(itemId, marketItem)
     end
     
     -- Request proficiency info from server if needed - use cacheId (originalId)
-    if g_game.sendWeaponProficiencyAction then
-        g_game.sendWeaponProficiencyAction(0, cacheId)
-    end
+    g_game.sendWeaponProficiencyAction(0, cacheId)
 end
 
 -- Display proficiency data for selected item
@@ -2029,7 +2025,7 @@ function WeaponProficiency:applyOneHandedFilter(items)
     for _, item in ipairs(items) do
         local thingType = item.thingType
         if thingType then
-            local slotType = thingType.getClothSlot and thingType:getClothSlot() or 0
+            local slotType = thingType:getClothSlot() or 0
             if slotType == 6 then
                 table.insert(filteredItems, item)
             end
@@ -2046,7 +2042,7 @@ function WeaponProficiency:applyTwoHandedFilter(items)
     for _, item in ipairs(items) do
         local thingType = item.thingType
         if thingType then
-            local slotType = thingType.getClothSlot and thingType:getClothSlot() or 0
+            local slotType = thingType:getClothSlot() or 0
             if slotType == 0 then
                 table.insert(filteredItems, item)
             end
@@ -2093,7 +2089,7 @@ function WeaponProficiency:onResetClick()
     
     -- Send empty perks list to server to clear all perks
     -- This is more reliable than using action type 2 (reset)
-    if g_game.sendWeaponProficiencyApply and self.selectedItemId then
+    if self.selectedItemId then
         -- Send empty arrays to clear all perks
         g_game.sendWeaponProficiencyApply(self.selectedItemId, {}, {})
     end
@@ -2164,7 +2160,6 @@ function WeaponProficiency:applyPendingSelections()
     
     -- Send to server using the protocol function with two parallel arrays
     -- g_game.sendWeaponProficiencyApply(itemId, levelsArray, perkPositionsArray)
-    if g_game.sendWeaponProficiencyApply then
         g_game.sendWeaponProficiencyApply(self.selectedItemId, levels, perkPositions)
         
         -- Update cache with ALL applied perks (convert back to server format: 1-indexed)
@@ -2184,7 +2179,6 @@ function WeaponProficiency:applyPendingSelections()
             if self.selectedMarketItem and self.selectedMarketItem.displayItem then
                 self:displayPerks(self.selectedItemId, appliedPerks, self.selectedMarketItem.displayItem)
             end
-        end
         
         -- Update button states (Apply should be disabled since we just applied)
         self:updateApplyButtonState()
@@ -2196,7 +2190,7 @@ function WeaponProficiency:applyPendingSelections()
         
         -- Request updated proficiency info from server to confirm
         scheduleEvent(function()
-            if g_game.sendWeaponProficiencyAction and self.selectedItemId then
+            if self.selectedItemId then
                 g_game.sendWeaponProficiencyAction(0, self.selectedItemId)
             end
         end, 200)

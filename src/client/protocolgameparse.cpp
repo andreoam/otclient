@@ -6529,7 +6529,6 @@ void ProtocolGame::parseWeaponProficiencyInfo(const InputMessagePtr& msg)
             }
         }
     }
-    
     g_lua.callGlobalField("g_game", "onWeaponProficiency", itemId, experience, perks, marketCategory);
 }
 

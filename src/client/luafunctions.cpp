@@ -74,7 +74,7 @@ void Client::registerLuaFunctions()
     g_lua.registerSingletonClass("g_things");
     g_lua.bindSingletonFunction("g_things", "loadAppearances", &ThingTypeManager::loadAppearances, &g_things);
     g_lua.bindSingletonFunction("g_things", "loadStaticData", &ThingTypeManager::loadStaticData, &g_things);
-    g_lua.bindSingletonFunction("g_things", "loadProficiencies", &ThingTypeManager::loadProficiencies, &g_things);
+    g_lua.bindSingletonFunction("g_things", "resolveProficienciesFile", &ThingTypeManager::resolveProficienciesFile, &g_things);
     g_lua.bindSingletonFunction("g_things", "loadDat", &ThingTypeManager::loadDat, &g_things);
     g_lua.bindSingletonFunction("g_things", "loadOtml", &ThingTypeManager::loadOtml, &g_things);
     g_lua.bindSingletonFunction("g_things", "isDatLoaded", &ThingTypeManager::isDatLoaded, &g_things);
@@ -391,8 +391,8 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "stashStowItem", &Game::stashStowItem, &g_game);
     g_lua.bindSingletonFunction("g_game", "requestHighscore", &Game::requestHighscore, &g_game);
     g_lua.bindSingletonFunction("g_game", "imbuementDurations", &Game::imbuementDurations, &g_game);
-    g_lua.bindSingletonFunction("g_game", "sendWeaponProficiencyAction", &Game::sendWeaponProficiencyAction, &g_game);
-    g_lua.bindSingletonFunction("g_game", "sendWeaponProficiencyApply", &Game::sendWeaponProficiencyApply, &g_game);
+    g_lua.bindSingletonFunction("g_game", "openWheelOfDestiny", &Game::openWheelOfDestiny, &g_game);
+    g_lua.bindSingletonFunction("g_game", "applyWheelOfDestiny", &Game::applyWheelOfDestiny, &g_game);
     g_lua.bindSingletonFunction("g_game", "requestBless", &Game::requestBless, &g_game);
     g_lua.bindSingletonFunction("g_game", "sendQuickLoot", &Game::sendQuickLoot, &g_game);
     g_lua.bindSingletonFunction("g_game", "requestQuickLootBlackWhiteList", &Game::requestQuickLootBlackWhiteList, &g_game);
@@ -420,8 +420,8 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "openWheel", &Game::openWheel, &g_game);
     g_lua.bindSingletonFunction("g_game", "sendApplyWheelPoints", &Game::sendApplyWheelPoints, &g_game);
     g_lua.bindSingletonFunction("g_game", "gemAction", &Game::gemAction, &g_game);
-    g_lua.bindSingletonFunction("g_game", "openWheelOfDestiny", &Game::openWheelOfDestiny, &g_game);
-    g_lua.bindSingletonFunction("g_game", "applyWheelOfDestiny", &Game::applyWheelOfDestiny, &g_game);
+    g_lua.bindSingletonFunction("g_game", "sendWeaponProficiencyAction", &Game::sendWeaponProficiencyAction, &g_game);
+    g_lua.bindSingletonFunction("g_game", "sendWeaponProficiencyApply", &Game::sendWeaponProficiencyApply, &g_game);
 
     g_lua.registerSingletonClass("g_gameConfig");
     g_lua.bindSingletonFunction("g_gameConfig", "loadFonts", &GameConfig::loadFonts, &g_gameConfig);
@@ -781,6 +781,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<ThingType>("getWeaponType", &ThingType::getWeaponType);
     g_lua.bindClassMemberFunction<ThingType>("getMinimumLevel", &ThingType::getMinimumLevel);
     g_lua.bindClassMemberFunction<ThingType>("getImbueSlots", &ThingType::getImbueSlots);
+    g_lua.bindClassMemberFunction<ThingType>("getRestrictVocation", &ThingType::getRestrictVocation);
 #ifdef FRAMEWORK_EDITOR
     g_lua.bindClassMemberFunction<ThingType>("exportImage", &ThingType::exportImage);
 #endif
@@ -818,6 +819,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Item>("getWeaponType", &Item::getWeaponType);
     g_lua.bindClassMemberFunction<Item>("getMinimumLevel", &Item::getMinimumLevel);
     g_lua.bindClassMemberFunction<Item>("getImbueSlots", &Item::getImbueSlots);
+    g_lua.bindClassMemberFunction<Item>("getRestrictVocation", &Item::getRestrictVocation);
     g_lua.bindClassMemberFunction<Item>("isDualWield", &Item::isDualWield);
 #ifdef FRAMEWORK_EDITOR
     g_lua.bindClassMemberFunction<Item>("getName", &Item::getName);

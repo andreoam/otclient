@@ -185,7 +185,6 @@ public:
     void sendApplyWheelOfDestiny(const std::vector<uint16_t>& wheelPointsVec, const std::vector<uint16_t>& activeGemsVec);
 
     // Weapon Proficiency
-    void parseWeaponProficiencyExperience(const InputMessagePtr& msg);
     void sendWeaponProficiencyAction(uint8_t actionType, uint16_t itemId = 0);
     void sendWeaponProficiencyApply(uint16_t itemId, const std::vector<uint8_t>& levels, const std::vector<uint8_t>& perkPositions);
     
@@ -393,6 +392,7 @@ private:
     void parseBestiaryCharmsData(const InputMessagePtr& msg);
 
     // 15x
+    void parseWeaponProficiencyExperience(const InputMessagePtr& msg);
     void parseWeaponProficiencyInfo(const InputMessagePtr& msg);
 
     void parseHighscores(const InputMessagePtr& msg);

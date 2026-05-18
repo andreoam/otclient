@@ -469,14 +469,23 @@ void ThingType::applyAppearanceFlags(const appearances::AppearanceFlags& flags)
     }
 
     if (flags.has_weapon_type()) {
-        auto wt = flags.weapon_type();
-        if (wt == otclient::protobuf::appearances::WEAPON_TYPE_SWORD) m_weaponType = 20;
-        else if (wt == otclient::protobuf::appearances::WEAPON_TYPE_AXE) m_weaponType = 17;
-        else if (wt == otclient::protobuf::appearances::WEAPON_TYPE_CLUB) m_weaponType = 18;
-        else if (wt == otclient::protobuf::appearances::WEAPON_TYPE_FIST) m_weaponType = 27;
-        else if (wt == otclient::protobuf::appearances::WEAPON_TYPE_BOW || wt == otclient::protobuf::appearances::WEAPON_TYPE_CROSSBOW || wt == otclient::protobuf::appearances::WEAPON_TYPE_THROW) m_weaponType = 19;
-        else if (wt == otclient::protobuf::appearances::WEAPON_TYPE_WAND_ROD) m_weaponType = 21;
-        else m_weaponType = 0;
+        const auto wt = flags.weapon_type();
+        if (wt == otclient::protobuf::appearances::WEAPON_TYPE_SWORD)
+            m_weaponType = ITEM_CATEGORY_SWORDS;
+        else if (wt == otclient::protobuf::appearances::WEAPON_TYPE_AXE)
+            m_weaponType = ITEM_CATEGORY_AXES;
+        else if (wt == otclient::protobuf::appearances::WEAPON_TYPE_CLUB)
+            m_weaponType = ITEM_CATEGORY_CLUBS;
+        else if (wt == otclient::protobuf::appearances::WEAPON_TYPE_FIST)
+            m_weaponType = ITEM_CATEGORY_FIST_WEAPONS;
+        else if (wt == otclient::protobuf::appearances::WEAPON_TYPE_BOW
+              || wt == otclient::protobuf::appearances::WEAPON_TYPE_CROSSBOW
+              || wt == otclient::protobuf::appearances::WEAPON_TYPE_THROW)
+            m_weaponType = ITEM_CATEGORY_DISTANCE_WEAPONS;
+        else if (wt == otclient::protobuf::appearances::WEAPON_TYPE_WAND_ROD)
+            m_weaponType = ITEM_CATEGORY_WANDS_RODS;
+        else
+            m_weaponType = 0;
     }
 }
 #endif

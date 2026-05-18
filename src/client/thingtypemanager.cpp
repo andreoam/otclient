@@ -22,6 +22,7 @@
 
 #include "thingtypemanager.h"
 
+#include <nlohmann/json.hpp>
 
 #include "game.h"
 #include "spriteappearances.h"
@@ -39,7 +40,6 @@
 #include <framework/core/binarytree.h>
 #endif
 
-using json = nlohmann::json;
 
 ThingTypeManager g_things;
 
@@ -47,19 +47,17 @@ const nlohmann::json& ThingTypeManager::getCatalogContent(const std::string& fil
 {
     const auto path = g_resources.resolvePath(g_resources.guessFilePath(file + "catalog-content", "json"));
     if (path != m_catalogContentPath) {
-        m_catalogContent = nlohmann::json::parse(g_resources.readFileContents(path));
-        m_catalogContentBasePath = file;
+        m_catalogContent = std::make_unique<nlohmann::json>(nlohmann::json::parse(g_resources.readFileContents(path)));
         m_catalogContentPath = path;
     }
 
-    return m_catalogContent;
+    return *m_catalogContent;
 }
 
 void ThingTypeManager::clearCatalogContent()
 {
-    m_catalogContentBasePath.clear();
     m_catalogContentPath.clear();
-    m_catalogContent = nlohmann::json();
+    m_catalogContent.reset();
 }
 
 void ThingTypeManager::init()
@@ -80,6 +78,8 @@ void ThingTypeManager::terminate()
 
     m_nullThingType = nullptr;
     m_proficienciesFile.clear();
+    m_proficiencyThingsCache.clear();
+    m_proficiencyThingsCacheDirty = true;
     clearCatalogContent();
 
 #ifdef FRAMEWORK_EDITOR
@@ -232,6 +232,7 @@ bool ThingTypeManager::loadAppearances(const std::string& file)
                 }
             }
             m_datLoaded = true;
+            m_proficiencyThingsCacheDirty = true;
         } else {
             std::stringstream datFileStream;
             auto appearancesLib = appearances::Appearances();
@@ -341,7 +342,7 @@ bool ThingTypeManager::loadStaticData(const std::string& file)
 }
 #endif
 
-bool ThingTypeManager::loadProficiencies(const std::string& file)
+bool ThingTypeManager::resolveProficienciesFile(const std::string& file)
 {
     m_proficienciesFile.clear();
 
@@ -411,21 +412,29 @@ ThingTypeList ThingTypeManager::findThingTypeByAttr(const ThingAttr attr, const 
     return ret;
 }
 
-ThingTypeList ThingTypeManager::getProficiencyThings()
+void ThingTypeManager::buildProficiencyCache()
 {
-    ThingTypeList ret;
+    m_proficiencyThingsCache.clear();
     for (const auto& type : m_thingTypes[ThingCategoryItem]) {
         if (type && type->getProficiencyId() > 0) {
-            ret.emplace_back(type);
+            m_proficiencyThingsCache.emplace_back(type);
         }
     }
-    return ret;
+    m_proficiencyThingsCacheDirty = false;
+}
+
+const ThingTypeList& ThingTypeManager::getProficiencyThings()
+{
+    if (m_proficiencyThingsCacheDirty) {
+        buildProficiencyCache();
+    }
+    return m_proficiencyThingsCache;
 }
 
 std::string ThingTypeManager::getCyclopediaItemName(uint16_t id)
 {
-    auto type = getThingType(id, ThingCategoryItem);
-    if (!type) return "";
+    const auto& type = getThingType(id, ThingCategoryItem);
+    if (type->isNull()) return "";
     if (!type->getMarketData().name.empty()) return type->getMarketData().name;
     return type->getName();
 }
@@ -439,7 +448,6 @@ std::string ThingTypeManager::getProficienciesFile()
     if (!m_proficienciesFile.empty() && g_resources.fileExists(m_proficienciesFile)) {
         return m_proficienciesFile;
     }
-
 
     return "";
 }

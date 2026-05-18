@@ -160,9 +160,10 @@ public:
     uint32_t getSkillWheelGemVocationId() { return m_skillWheelGem.vocation_id; }
     uint32_t getCyclopediaType() { return m_cyclopediaType; }
     uint32_t getProficiencyId() { return m_proficiencyId; }
-    uint32_t getWeaponType() { return m_weaponType; }
-    uint32_t getMinimumLevel() { return m_minimumLevel; }
-    uint32_t getImbueSlots() { return m_imbueSlots; }
+    uint32_t getWeaponType() const { return m_weaponType; }
+    uint32_t getMinimumLevel() const { return m_minimumLevel; }
+    uint32_t getImbueSlots() const { return m_imbueSlots; }
+    const std::vector<uint32_t>& getRestrictVocation() const { return m_restrictVocation; }
 
     bool isDecoKit() { return (m_flags & ThingFlagAttrDecoKit); }
     bool isLoading() const { return m_loading.load(std::memory_order_acquire); }
