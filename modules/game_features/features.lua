@@ -270,5 +270,9 @@ controller:registerEvents(g_game, {
         if version >= 1500 then
             g_game.enableFeature(GameVocationMonk)
         end
+
+        if version >= 1510 then
+            g_game.enableFeature(GameWeaponProficiency)
+        end
     end
 })

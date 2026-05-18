@@ -224,6 +224,11 @@ GameCharacterSkillStats = 127
 GameCreaturePaperdoll = 128
 GameMultiSpr = 129
 GameVocationMonk = 130
+GameLevelPercentU16 = 131
+GameEffectSource = 132
+GameNpcWindowRedesign = 133
+GameTaskboard = 134
+GameProficiency = 135
 
 TextColors = {
     red = '#f55e5e',    -- '#c83200'
@@ -523,4 +528,11 @@ InspectObjectTypes = {
 -- If the server rejects unknown tab ids, this may produce a protocol error.
 InspectCreaturesTypes = {
     INSPECT_CREATURE = 4,
+}
+
+WeaponProficiency = {
+    WEAPON_PROFICIENCY_ITEM_INFO = 0,
+    WEAPON_PROFICIENCY_LIST_INFO = 1,
+    WEAPON_PROFICIENCY_RESET_PERKS = 2,
+    WEAPON_PROFICIENCY_APPLY_PERKS = 3
 }

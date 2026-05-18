@@ -52,14 +52,38 @@ if not WeaponProficiency then
     WeaponProficiency.listData = {}
 end
 
+WeaponProficiency = WeaponProficiency or {}
+WeaponProficiency.__index = WeaponProficiency
+
+WeaponProficiency.itemList = WeaponProficiency.itemList or {}
+WeaponProficiency.cacheList = WeaponProficiency.cacheList or {}
+WeaponProficiency.ItemCategory = WeaponProficiency.ItemCategory or {
+    Axes = 17, Clubs = 18, DistanceWeapons = 19,
+    Swords = 20, WandsRods = 21, FistWeapons = 27,
+}
+WeaponProficiency.perkPanelsName = WeaponProficiency.perkPanelsName or {
+    "oneBonusIconPanel", "twoBonusIconPanel", "threeBonusIconPanel"
+}
+WeaponProficiency.filters = WeaponProficiency.filters or {}
+WeaponProficiency.filters["levelButton"] = WeaponProficiency.filters["levelButton"] or false
+WeaponProficiency.filters["vocButton"] = WeaponProficiency.filters["vocButton"] or false
+WeaponProficiency.filters["oneButton"] = WeaponProficiency.filters["oneButton"] or false
+WeaponProficiency.filters["twoButton"] = WeaponProficiency.filters["twoButton"] or false
+WeaponProficiency.listPool = WeaponProficiency.listPool or {}
+WeaponProficiency.listData = WeaponProficiency.listData or {}
+WeaponProficiency.listWidgetHeight = WeaponProficiency.listWidgetHeight or 34
+WeaponProficiency.listCapacity = WeaponProficiency.listCapacity or 0
+WeaponProficiency.listMinWidgets = WeaponProficiency.listMinWidgets or 0
+WeaponProficiency.listMaxWidgets = WeaponProficiency.listMaxWidgets or 0
+WeaponProficiency.offset = WeaponProficiency.offset or 0
+
 function init()
-    
     -- Load proficiency JSON data
     ProficiencyData:loadProficiencyJson()
-    
+
     -- Create item cache from market data
     WeaponProficiency:createItemCache()
-    
+
     -- Connect to game events
     connect(g_game, {
         onGameStart = onGameStart,
@@ -67,7 +91,6 @@ function init()
         onWeaponProficiency = onWeaponProficiency,
         onWeaponProficiencyExperience = onWeaponProficiencyExperience
     })
-    
 end
 
 function terminate()
@@ -91,13 +114,16 @@ function onGameStart()
     WeaponProficiency.cacheList = {}
     WeaponProficiency.currentEquippedExp = 0
     WeaponProficiency.currentEquippedMaxExp = 0
-    
+
+    -- Client version can change after module init; reload before rebuilding the item cache.
+    ProficiencyData:loadProficiencyJson(true)
+
     -- Recreate item cache on each login (may have been cleared by reset())
     WeaponProficiency:createItemCache()
     
     -- Add button to main panel (only for clients that support proficiency system)
     -- Use addToggleButton for notification support (20x40 vertical image)
-    if modules.game_mainpanel and g_game.getClientVersion() >= 1500 then
+    if modules.game_mainpanel and g_game.getFeature(GameWeaponProficiency) then
         WeaponProficiency.button = modules.game_mainpanel.addToggleButton(
             'ProficiencyButton', 
             tr('Open Weapon Proficiency'),
@@ -665,7 +691,13 @@ end
 
 -- Create item cache from proficiency things
 function WeaponProficiency:createItemCache()
+    self.itemList = {}
     self.itemList[MarketCategory.WeaponsAll] = {}
+    self.ItemCategory = self.ItemCategory or {
+        Axes = 17, Clubs = 18, DistanceWeapons = 19,
+        Swords = 20, WandsRods = 21, FistWeapons = 27,
+    }
+
     for _, v in pairs(self.ItemCategory) do
         self.itemList[v] = {}
     end
@@ -737,6 +769,8 @@ end
 
 -- Sort weapons by experience (highest first), then by name
 function sortWeaponProficiency(marketCategory)
+    if not WeaponProficiency.itemList then return end
+
     local itemList = WeaponProficiency.itemList[marketCategory]
     if not itemList then return end
     
@@ -947,76 +981,62 @@ function WeaponProficiency:refreshItemList()
         items = filteredItems
     end
     
-    -- Clear existing items
-    local children = itemList:getChildren()
-    for _, child in ipairs(children) do
-        local itemWidget = child:getChildById('item')
-        if itemWidget then
-            itemWidget:setItemId(0)
-        end
-        -- Clear stars
-        local starPanel = child:getChildById('starsBackground')
-        if starPanel then
-            starPanel:destroyChildren()
-        end
-        -- Remove old click callback
-        child.onClick = nil
-    end
+    itemList:destroyChildren()
     
-    -- Populate items with click handlers
+    -- Populate items with click handlers. The grid itself owns scrolling, so do
+    -- not cap this to the number of visible cells.
     local index = 1
     for _, marketItem in ipairs(items) do
-        local child = itemList:getChildByIndex(index)
-        if child then
-            local itemWidget = child:getChildById('item')
-            if itemWidget and marketItem.displayItem then
-                -- Use stored displayId (guaranteed non-zero) instead of displayItem:getId()
-                local displayId = marketItem.displayId or marketItem.originalId
-                -- Use showAs (displayId) as cache key - explicitly check for nil to handle showAs==0
-                local cacheId
-                if marketItem.marketData and marketItem.marketData.showAs ~= nil then
-                    cacheId = marketItem.marketData.showAs
-                else
-                    cacheId = displayId
-                end
-                itemWidget:setItemId(displayId)
+        local child = g_ui.createWidget("ItemBox", itemList, "widget_" .. index)
+        local itemWidget = child and child:getChildById('item')
+        if itemWidget and marketItem.displayItem then
+            -- Use stored displayId (guaranteed non-zero) instead of displayItem:getId()
+            local displayId = marketItem.displayId or marketItem.originalId
+            -- Use showAs (displayId) as cache key - explicitly check for nil to handle showAs==0
+            local cacheId
+            if marketItem.marketData and marketItem.marketData.showAs ~= nil then
+                cacheId = marketItem.marketData.showAs
+            else
+                cacheId = displayId
+            end
+            itemWidget:setItemId(displayId)
+            
+            -- Add tooltip with item name
+            child:setTooltip(marketItem.marketData.name or "")
+            
+            -- Add stars based on proficiency level
+            local starPanel = child:getChildById('starsBackground')
+            if starPanel then
+                starPanel:destroyChildren()
                 
-                -- Add tooltip with item name
-                child:setTooltip(marketItem.marketData.name or "")
+                -- Get experience and calculate level
+                local cacheEntry = self.cacheList[cacheId]
+                local exp = cacheEntry and cacheEntry.exp or 0
+                local weaponLevel = ProficiencyData:getCurrentLevelByExp(marketItem.displayItem, exp, false, marketItem.thingType) or 0
                 
-                -- Add stars based on proficiency level
-                local starPanel = child:getChildById('starsBackground')
-                if starPanel then
-                    starPanel:destroyChildren()
-                    
-                    -- Get experience and calculate level
-                    local cacheEntry = self.cacheList[cacheId]
-                    local exp = cacheEntry and cacheEntry.exp or 0
-                    local weaponLevel = ProficiencyData:getCurrentLevelByExp(marketItem.displayItem, exp, false, marketItem.thingType) or 0
-                    
-                    -- Create star widgets for each level achieved
-                    if weaponLevel > 0 then
-                        local mastery = isMasteryAchieved(marketItem.displayItem, cacheId, marketItem.thingType)
-                        for i = 1, weaponLevel do
-                            local star = g_ui.createWidget("MiniStar", starPanel)
-                            if star then
-                                if mastery then
-                                    star:setImageSource("/images/game/proficiency/icon-star-tiny-gold")
-                                end
-                            end
+                -- Create star widgets for each level achieved
+                if weaponLevel > 0 then
+                    local mastery = isMasteryAchieved(marketItem.displayItem, cacheId, marketItem.thingType)
+                    for i = 1, weaponLevel do
+                        local star = g_ui.createWidget("MiniStar", starPanel)
+                        if star and mastery then
+                            star:setImageSource(proficiencyImage("icon-star-tiny-gold"))
                         end
                     end
                 end
-                
-                -- Add click handler
-                child.onClick = function()
-                    WeaponProficiency:selectItem(displayId, marketItem)
-                end
             end
-            index = index + 1
+            
+            -- Add click handler
+            child.onClick = function()
+                WeaponProficiency:selectItem(displayId, marketItem)
+            end
         end
-        
-        if index > 45 then break end -- Max 45 items visible
+
+        index = index + 1
+    end
+
+    if self.itemListScroll then
+        self.itemListScroll:setValue(0)
     end
 end
 
@@ -1108,7 +1128,7 @@ function WeaponProficiency:selectItem(itemId, marketItem)
                 perkColumn:setId('perkColumn_' .. i)
                 local progress = perkColumn:getChildById('bonusSelectProgress')
                 if progress then
-                    progress:setWidth(0)
+                    progress:setPercent(0)
                 end
             end
             
@@ -1268,12 +1288,12 @@ function WeaponProficiency:updateStarWidget(starWidget, levelIndex, currentLevel
         if percent >= 100 then
             -- Level complete - show gold or silver star
             local iconType = masteryAchieved and "gold" or "silver"
-            starIcon:setImageSource('/images/game/proficiency/icon-star-tiny-' .. iconType)
+            starIcon:setImageSource(proficiencyImage('icon-star-tiny-' .. iconType))
         else
             -- Level not complete - show dark star
-            starIcon:setImageSource('/images/game/proficiency/icon-star-dark')
-                    end
-                end
+            starIcon:setImageSource(proficiencyImage('icon-star-dark'))
+        end
+    end
 end
 
 -- Update item frame/addons based on weapon level
@@ -1286,14 +1306,14 @@ function WeaponProficiency:updateItemAddons(currentExp, displayItem, masteryAchi
     local weaponLevelWidget = self.window:recursiveGetChildById("itemMasteryLevel")
     
     if iconLevelWidget then
-        iconLevelWidget:setImageSource("/images/game/proficiency/icon-masterylevel-" .. weaponLevel)
+        iconLevelWidget:setImageSource(proficiencyImage("icon-masterylevel-" .. weaponLevel))
     end
     
     if weaponLevelWidget then
         weaponLevelWidget:setVisible(weaponLevel > 0)
         if weaponLevel > 0 then
             local color = masteryAchieved and "gold" or "silver"
-            weaponLevelWidget:setImageSource(string.format("/images/game/proficiency/icon-masterylevel-%d-%s", weaponLevel, color))
+            weaponLevelWidget:setImageSource(proficiencyImage(string.format("icon-masterylevel-%d-%s", weaponLevel, color)))
         end
     end
 end
@@ -1332,16 +1352,11 @@ function WeaponProficiency:updatePerkColumn(perkColumn, levelData, levelIndex, c
     -- Level is unlocked if we have enough experience
     local isLevelUnlocked = levelIndex <= currentLevel
     
-    -- Update progress bar for this column - use height for vertical fill effect
+    -- Update progress bar for this column.
     local progressBar = perkColumn:getChildById('bonusSelectProgress')
     if progressBar then
         local percent = ProficiencyData:getLevelPercent(experience or 0, levelIndex, displayItem, thingType)
-        
-        -- Set progress bar width (horizontal fill from left to right)
-        -- Max width is 106 (108 panel width - 2 margin)
-        local maxWidth = 106
-        local fillWidth = math.floor((percent / 100) * maxWidth)
-        progressBar:setWidth(fillWidth)
+        progressBar:setPercent(percent)
         
         -- Unlock perks if this level is complete (100%)
         if percent >= 100 then
@@ -1458,9 +1473,9 @@ function WeaponProficiency:updatePerkColumn(perkColumn, levelData, levelIndex, c
             -- Update border based on state
             if borderWidget then
                 if isSelected and isLevelUnlocked then
-                    borderWidget:setImageSource('/images/game/proficiency/border-weaponmasterytreeicons-active')
+                    borderWidget:setImageSource(proficiencyImage('border-weaponmasterytreeicons-active'))
                 else
-                    borderWidget:setImageSource('/images/game/proficiency/border-weaponmasterytreeicons-inactive')
+                    borderWidget:setImageSource(proficiencyImage('border-weaponmasterytreeicons-inactive'))
                 end
             end
             
@@ -1589,11 +1604,11 @@ function WeaponProficiency:updatePerkVisualState(levelIndex)
             -- Update border
             if borderWidget then
                 if isSelected and isLevelUnlocked then
-                    borderWidget:setImageSource('/images/game/proficiency/border-weaponmasterytreeicons-active')
+                    borderWidget:setImageSource(proficiencyImage('border-weaponmasterytreeicons-active'))
                 else
-                    borderWidget:setImageSource('/images/game/proficiency/border-weaponmasterytreeicons-inactive')
-        end
-    end
+                    borderWidget:setImageSource(proficiencyImage('border-weaponmasterytreeicons-inactive'))
+                end
+            end
             
             -- Highlight selected
             if highlightWidget then
@@ -1638,7 +1653,7 @@ function WeaponProficiency:updateBonusDetailForLevel(levelIndex)
     
     -- No selection - show lock icon
     bonusNameWidget:setText("")
-    bonusNameWidget:setImageSource("/images/game/proficiency/icon-lock-grey")
+    bonusNameWidget:setImageSource(proficiencyImage("icon-lock-grey"))
 end
 
 -- Update bonus detail panels at the bottom
@@ -1692,15 +1707,15 @@ function WeaponProficiency:updateBonusDetails(proficiencyContent, selectedPerks)
                         bonusNameWidget:setImageSource("") -- Hide lock icon
                     else
                         bonusNameWidget:setText("")
-                        bonusNameWidget:setImageSource("/images/game/proficiency/icon-lock-grey")
+                        bonusNameWidget:setImageSource(proficiencyImage("icon-lock-grey"))
                     end
                 else
                     bonusNameWidget:setText("")
-                    bonusNameWidget:setImageSource("/images/game/proficiency/icon-lock-grey")
+                    bonusNameWidget:setImageSource(proficiencyImage("icon-lock-grey"))
                 end
             elseif bonusNameWidget then
                 bonusNameWidget:setText("")
-                bonusNameWidget:setImageSource("/images/game/proficiency/icon-lock-grey")
+                bonusNameWidget:setImageSource(proficiencyImage("icon-lock-grey"))
             end
         end
     end
@@ -2030,4 +2045,3 @@ function WeaponProficiency:updateApplyButtonState()
         resetBtn:setEnabled(hasAppliedPerks)
     end
 end
-

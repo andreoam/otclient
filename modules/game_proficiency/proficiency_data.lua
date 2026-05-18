@@ -50,13 +50,82 @@ local WEAPON_KEYWORDS = {
     rod = { "rod" },
 }
 
+local DEFAULT_PROFICIENCIES_FILE = "/json/proficiencies.json"
+
+local function getCurrentThingsVersion()
+    if not g_game or not g_game.getClientVersion then
+        return nil
+    end
+
+    local version = g_game.getClientVersion()
+    if not version or version <= 0 then
+        return nil
+    end
+
+    return tostring(version)
+end
+
+local function getProficienciesFileFromCatalog(basePath)
+    local catalogFile = basePath .. "/catalog-content.json"
+    if not g_resources.fileExists(catalogFile) then
+        return nil
+    end
+
+    local status, catalog = pcall(function()
+        return json.decode(g_resources.readFileContents(catalogFile))
+    end)
+
+    if not status or type(catalog) ~= "table" then
+        return nil
+    end
+
+    for _, entry in pairs(catalog) do
+        if type(entry) == "table" then
+            local entryType = entry.type or entry.Type
+            local entryFile = entry.file or entry.File
+            if entryType == "proficiencies" and entryFile then
+                local file = string.sub(entryFile, 1, 1) == "/" and entryFile or basePath .. "/" .. entryFile
+                if g_resources.fileExists(file) then
+                    return file
+                end
+                return nil
+            end
+        end
+    end
+
+    return nil
+end
+
+local function resolveProficienciesFile()
+    local version = getCurrentThingsVersion()
+    if version then
+        local basePaths = {
+            "/things/" .. version,
+            "/data/things/" .. version
+        }
+
+        for _, basePath in ipairs(basePaths) do
+            local file = getProficienciesFileFromCatalog(basePath)
+            if file then
+                return file
+            end
+        end
+    end
+
+    if g_resources.fileExists(DEFAULT_PROFICIENCIES_FILE) then
+        return DEFAULT_PROFICIENCIES_FILE
+    end
+
+    return nil
+end
+
 -- Load proficiency data from JSON file
-function ProficiencyData:loadProficiencyJson()
+function ProficiencyData:loadProficiencyJson(skipItemCache)
     self.content = {}
     self.nameIndex = {}
     
-    local file = "/json/proficiencies.json"
-    if not g_resources.fileExists(file) then
+    local file = resolveProficienciesFile()
+    if not file then
         return false
     end
     
@@ -64,24 +133,30 @@ function ProficiencyData:loadProficiencyJson()
         return json.decode(g_resources.readFileContents(file))
     end)
     
-    if not status then
+    if not status or type(result) ~= "table" then
         return false
     end
+
+    self.loadedFile = file
     
     for _, data in pairs(result) do
-        local ProficiencyId = data["ProficiencyId"]
-        local name = data["Name"]
-        self.content[ProficiencyId] = data
-        
-        -- Build name-based index for quick lookup
-        if name then
-            local lowerName = string.lower(name)
-            self.nameIndex[lowerName] = ProficiencyId
+        if type(data) == "table" then
+            local ProficiencyId = data["ProficiencyId"]
+            local name = data["Name"]
+            if ProficiencyId then
+                self.content[ProficiencyId] = data
+            end
+
+            -- Build name-based index for quick lookup
+            if ProficiencyId and name then
+                local lowerName = string.lower(name)
+                self.nameIndex[lowerName] = ProficiencyId
+            end
         end
     end
     
     
-    if WeaponProficiency then
+    if WeaponProficiency and not skipItemCache then
         WeaponProficiency:createItemCache()
     end
     
@@ -538,7 +613,7 @@ function ProficiencyData:getImageSourceAndClip(perkData)
     local perkType = perkData.Type
     local data = PerkVisualData[perkType]
     local source = (data and data.source) or "icons-0"
-    local imagePath = string.format("/images/game/proficiency/%s", source)
+    local imagePath = proficiencyImage(source)
     
     if not data then
         return imagePath, "0 0"
@@ -788,4 +863,3 @@ function ProficiencyData:getWeaponProfessionType(displayItem, thingType)
     
     return "regular"
 end
-

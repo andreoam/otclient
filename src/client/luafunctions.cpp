@@ -413,8 +413,6 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "requestOpenRewardHistory", &Game::requestOpenRewardHistory, &g_game);
     g_lua.bindSingletonFunction("g_game", "requestGetRewardDaily", &Game::requestGetRewardDaily, &g_game);
     g_lua.bindSingletonFunction("g_game", "sendRequestTrackerQuestLog", &Game::sendRequestTrackerQuestLog, &g_game);
-    
-    // Wheel of Destiny
     g_lua.bindSingletonFunction("g_game", "openWheel", &Game::openWheel, &g_game);
     g_lua.bindSingletonFunction("g_game", "sendApplyWheelPoints", &Game::sendApplyWheelPoints, &g_game);
     g_lua.bindSingletonFunction("g_game", "gemAction", &Game::gemAction, &g_game);

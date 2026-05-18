@@ -1,6 +1,12 @@
 -- Weapon Proficiency Constants
 -- Based on Canary server proficiency system (Summer Update 2025)
 
+PROFICIENCY_IMAGE_PATH = "/modules/game_proficiency/images/"
+
+function proficiencyImage(asset)
+    return PROFICIENCY_IMAGE_PATH .. asset
+end
+
 -- Weapon Perk Types
 PERK_WEAPON_ATTACK = 0
 PERK_SHIELD_DEFENSE = 1
@@ -331,6 +337,5 @@ UnknownCategories = {
     [WEAPON_WANDROD or 4] = MarketCategory.WandsRods,
     [WEAPON_CROSSBOW or 9]= MarketCategory.DistanceWeapons
 }
-
 
 

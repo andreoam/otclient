@@ -468,7 +468,7 @@ namespace Otc
         GameMagicEffectU16 = 16,
         GamePlayerMarket = 17,
         GameSpritesU32 = 18,
-        GameProficiency = 19, // game proficiency apenas para 1510+
+        // 19 unused
         GameOfflineTrainingTime = 20,
         GamePurseSlot = 21,
         GameFormatCreatureName = 22,
@@ -579,6 +579,11 @@ namespace Otc
         GameCreaturePaperdoll = 128,
         GameMultiSpr = 129,
         GameVocationMonk = 130,
+        GameLevelPercentU16 = 131,
+        GameEffectSource = 132,
+        GameNpcWindowRedesign = 133,
+        GameTaskboard = 134,
+        GameProficiency = 135,
         LastGameFeature
     };
 
@@ -881,7 +886,15 @@ namespace Otc
         OPEN_SEARCH = 5,
     };
 
-   enum Imbuement_Window_t : uint8_t
+    enum WeaponProficiency_t : uint8_t
+    {
+        WEAPON_PROFICIENCY_ITEM_INFO = 0,
+        WEAPON_PROFICIENCY_LIST_INFO = 1,
+        WEAPON_PROFICIENCY_RESET_PERKS = 2,
+        WEAPON_PROFICIENCY_APPLY_PERKS = 3
+    };
+
+    enum Imbuement_Window_t : uint8_t
     {
         IMBUEMENT_WINDOW_CHOICE = 0,
         IMBUEMENT_WINDOW_SELECT_ITEM = 1,

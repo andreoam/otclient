@@ -169,14 +169,7 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                     parseImbuementDurations(msg);
                     break;
                 case Proto::GameServerWeaponProficiencyExperience:
-                    // Weapon proficiency experience update (Summer Update 2025)
-                    // Structure: uint16 itemId, uint32 experience, uint8 hasUnusedPerk
-                    if (g_game.getClientVersion() >= 1510) {
-                        uint16_t itemId = msg->getU16();
-                        uint32_t experience = msg->getU32();
-                        uint8_t hasUnusedPerk = msg->getU8(); // 0x01 if has unused perk
-                        g_lua.callGlobalField("g_game", "onWeaponProficiencyExperience", itemId, experience, hasUnusedPerk != 0);
-                    }
+                    parseWeaponProficiencyExperience(msg);
                     break;
                 case Proto::GameServerPassiveCooldown:
                     parsePassiveCooldown(msg);
@@ -487,10 +480,7 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                     parseCyclopediaHouseAuctionMessage(msg);
                     break;
                 case Proto::GameServerWeaponProficiencyInfo:
-                    // Weapon proficiency info (Summer Update 2025)
-                    if (g_game.getClientVersion() >= 1510) {
-                        parseWeaponProficiencyInfo(msg);
-                    }
+                    parseWeaponProficiencyInfo(msg);
                     break;
                 case Proto::GameServerCyclopediaHousesInfo:
                     parseCyclopediaHousesInfo(msg);
@@ -6507,6 +6497,14 @@ void ProtocolGame::parseHighscores(const InputMessagePtr& msg)
     const uint32_t entriesTs = msg->getU32(); // last update
 
     g_game.processHighscore(serverName, world, worldType, battlEye, vocations, categories, page, totalPages, highscores, entriesTs);
+}
+
+void ProtocolGame::parseWeaponProficiencyExperience(const InputMessagePtr& msg)
+{
+    const uint16_t itemId = msg->getU16();
+    const uint32_t experience = msg->getU32();
+    const uint8_t hasUnusedPerk = msg->getU8();
+    g_lua.callGlobalField("g_game", "onWeaponProficiencyExperience", itemId, experience, hasUnusedPerk != 0);
 }
 
 void ProtocolGame::parseWeaponProficiencyInfo(const InputMessagePtr& msg)

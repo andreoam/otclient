@@ -697,12 +697,9 @@ function StatsBar.initProficiencyTopBar()
     
     local profWidget = statsBar:recursiveGetChildById('proficiencyTopBar')
     if profWidget then
-        -- Show only if client supports proficiency (version >= 1500)
-        local showProficiency = g_game.getClientVersion() >= 1500
+        local showProficiency = g_game.getFeature(GameWeaponProficiency)
         profWidget:setVisible(showProficiency)
-        
-        -- Update proficiency display if module is loaded
-        if showProficiency and modules.game_proficiency and modules.game_proficiency.updateTopBarProficiency then
+        if showProficiency and modules.game_proficiency then
             modules.game_proficiency.updateTopBarProficiency()
         end
     end
