@@ -2394,28 +2394,3 @@ function WeaponProficiency:updateApplyButtonState()
         resetBtn:setEnabled(hasAppliedPerks)
     end
 end
-
-function test()
-    onWeaponProficiency(43879, 1972517, { 
-    [1] = { 
-        [1] = 0,
-        [2] = 0
-    },
-    [2] = { 
-        [1] = 1,
-        [2] = 2
-    },
-    [3] = { 
-        [1] = 2,
-        [2] = 1
-    },
-    [4] = { 
-        [1] = 3,
-        [2] = 1
-    },
-    [5] = { 
-        [1] = 4,
-        [2] = 2
-    }
-}, 19)
-end
