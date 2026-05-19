@@ -70,15 +70,15 @@ local function onOpenImbuementWindow(...)
 end
 
 local function onImbuementItem(...)
-    return callNew('onImbuementItem', ...)
+    if isModernImbuementWindow() then
+        return callNew('onImbuementItem', ...)
+    else
+        return callOld('onImbuementItem', ...)
+    end
 end
 
 local function onImbuementScroll(...)
     return callNew('onImbuementScroll', ...)
-end
-
-local function onImbuementWindow(...)
-    return callOld('onImbuementWindow', ...)
 end
 
 local function onResourcesBalanceChange(...)
@@ -132,7 +132,6 @@ function init()
         onOpenImbuementWindow = onOpenImbuementWindow,
         onImbuementItem = onImbuementItem,
         onImbuementScroll = onImbuementScroll,
-        onImbuementWindow = onImbuementWindow,
         onResourcesBalanceChange = onResourcesBalanceChange,
         onCloseImbuementWindow = onCloseImbuementWindow,
         onMessageDialog = onMessageDialog
@@ -150,7 +149,6 @@ function terminate()
         onOpenImbuementWindow = onOpenImbuementWindow,
         onImbuementItem = onImbuementItem,
         onImbuementScroll = onImbuementScroll,
-        onImbuementWindow = onImbuementWindow,
         onResourcesBalanceChange = onResourcesBalanceChange,
         onCloseImbuementWindow = onCloseImbuementWindow,
         onMessageDialog = onMessageDialog

@@ -6000,11 +6000,7 @@ void ProtocolGame::parseImbuementWindow(const InputMessagePtr& msg)
                 needItem->setCount(count);
                 neededItemsList.push_back(needItem);
             }
-            if (isModernImbuementWindow) {
-                g_lua.callGlobalField("g_game", "onImbuementItem", itemId, tier, slots, activeSlots, imbuements, neededItemsList);
-            } else {
-                g_lua.callGlobalField("g_game", "onImbuementWindow", itemId, slots, activeSlots, imbuements, neededItemsList);
-            }
+            g_lua.callGlobalField("g_game", "onImbuementItem", itemId, tier, slots, activeSlots, imbuements, neededItemsList);
             break;
         }
     }

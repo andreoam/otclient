@@ -418,7 +418,7 @@ selectSlot = function(widget, slotId, activeSlot)
     end
 end
 
-function oldDesignApi.onImbuementWindow(itemId, slots, activeSlots, imbuements, needItems)
+function oldDesignApi.onImbuementItem(itemId, tier, slots, activeSlots, imbuements, needItems)
     if not itemId then
         return
     end
