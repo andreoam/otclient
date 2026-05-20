@@ -1642,7 +1642,6 @@ void ProtocolGame::sendImbuementDurations(const bool isOpen)
     send(msg);
 }
 
-
 void ProtocolGame::sendQuickLoot(const uint8_t variant, const Position& pos, const uint16_t itemId, const uint8_t stackpos)
 {
     const auto msg = std::make_shared<OutputMessage>();
